@@ -5,6 +5,7 @@
 #![feature(type_alias_impl_trait)]
 
 use drogue_device::actors::led::LedMessage;
+use drogue_device::drivers::led::neopixel::{NeoPixel, Rgb8, BLUE, GREEN, RED};
 use drogue_device::ActorContext;
 use embassy::time::Duration;
 use embassy::time::Timer;
@@ -13,7 +14,8 @@ use embassy_nrf::config::Config;
 use embassy_nrf::interrupt::Priority;
 use embassy_nrf::Peripherals;
 
-use nrf_smartled::pwm::Pwm;
+const NUM_LEDS: usize = 8;
+pub const YELLOW: Rgb8 = Rgb8::new(0xFF, 0xFF, 0x00);
 
 #[cfg(feature = "log")]
 use embassy_nrf::{gpio::NoPin, interrupt, uarte};
@@ -87,21 +89,22 @@ async fn main(s: embassy::executor::Spawner, mut p: Peripherals) {
     info!("Application started");
 
     //let mut neopixel = defmt::unwrap!(NeoPixel::new(p.PWM0, p.P0_16));
-    let mut neopixel = Pwm::new(p.PWM0, P.0_16);
+    //let mut neopixel = defmt::unwrap!(NeoPixel::<'_, _, 1>::new(p.PWM0, p.P0_16));
+
+    let mut neopixel = ap.neopixel;
 
     let mut dir = 1;
+
+    let mut pixels = [BLUE, BLUE, YELLOW, YELLOW, BLUE, BLUE, YELLOW, YELLOW];
 
     loop {
         if let Ok(f) = ap.user_led.request(LedMessage::Toggle) {
             f.await;
         }
 
-        neopixel.set(RED).await;
+        neopixel.set(&pixels).await;
         Timer::after(Duration::from_millis(500)).await;
-        neopixel.set(BLUE).await;
-        Timer::after(Duration::from_millis(500)).await;
-        neopixel.set(GREEN).await;
-        Timer::after(Duration::from_millis(500)).await;
+        pixels.rotate_right(1);
     }
 }
 

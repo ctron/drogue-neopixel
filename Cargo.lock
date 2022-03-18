@@ -172,11 +172,11 @@ dependencies = [
  "cortex-m-rt",
  "defmt",
  "defmt-rtt",
- "embassy",
+ "embassy 0.1.0 (git+https://github.com/embassy-rs/embassy.git?rev=da9c0efaad594b48cfcdf641d353133d14cf98fe)",
  "embassy-boot",
  "embassy-boot-nrf",
  "embassy-nrf",
- "embedded-storage 0.3.0",
+ "embedded-storage",
  "embedded-storage-async",
  "nrf-softdevice-mbr",
 ]
@@ -188,23 +188,21 @@ dependencies = [
  "adxl343",
  "bitflags",
  "cfg-if",
- "choreographer",
  "cortex-m 0.7.4",
  "cortex-m-rt",
  "defmt",
  "drogue-device",
- "embassy",
+ "embassy 0.1.0 (git+https://github.com/embassy-rs/embassy.git?rev=da9c0efaad594b48cfcdf641d353133d14cf98fe)",
  "embassy-boot",
  "embassy-boot-nrf",
  "embassy-nrf",
  "embedded-hal 0.2.7",
- "embedded-storage 0.3.0",
+ "embedded-storage",
  "embedded-storage-async",
  "futures",
  "heapless",
  "log",
  "lsm6ds33",
- "nrf-smartled",
  "nrf-softdevice",
  "nrf-softdevice-defmt-rtt",
  "nrf-softdevice-s140",
@@ -225,12 +223,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "14c189c53d098945499cdfa7ecc63567cf3886b3332b312a5b4585d8d3a6a610"
 
 [[package]]
-name = "cast"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "37b2a672a2cb129a2e41c10b1224bb368f9f37a2b16b612598138befd7b37eb5"
-
-[[package]]
 name = "ccm"
 version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -247,18 +239,6 @@ name = "cfg-if"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
-
-[[package]]
-name = "choreographer"
-version = "0.0.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "74c23e2df6f4cd1cad614d5fdde86968c64f0c0668163600931df5dc73db04a1"
-dependencies = [
- "groundhog",
- "heapless",
- "micromath 2.0.0",
- "smart-leds",
-]
 
 [[package]]
 name = "cipher"
@@ -540,12 +520,14 @@ dependencies = [
  "critical-section",
  "defmt",
  "drogue-device-macros",
- "embassy",
+ "embassy 0.1.0 (git+https://github.com/embassy-rs/embassy.git?rev=da9c0efaad594b48cfcdf641d353133d14cf98fe)",
  "embassy-boot",
+ "embassy-hal-common 0.1.0 (git+https://github.com/embassy-rs/embassy)",
+ "embassy-nrf",
  "embedded-hal 0.2.7",
  "embedded-hal 1.0.0-alpha.7",
  "embedded-hal-async",
- "embedded-storage 0.3.0",
+ "embedded-storage",
  "embedded-storage-async",
  "futures",
  "heapless",
@@ -601,9 +583,25 @@ dependencies = [
  "cortex-m 0.7.4",
  "critical-section",
  "defmt",
- "embassy-macros",
+ "embassy-macros 0.1.0 (git+https://github.com/embassy-rs/embassy.git?rev=da9c0efaad594b48cfcdf641d353133d14cf98fe)",
  "embedded-hal 0.2.7",
  "embedded-hal-async",
+ "futures",
+ "heapless",
+ "pin-project",
+]
+
+[[package]]
+name = "embassy"
+version = "0.1.0"
+source = "git+https://github.com/embassy-rs/embassy#f683b5d4544b5b2095dd9e0530fb0569ab97967e"
+dependencies = [
+ "atomic-polyfill",
+ "cfg-if",
+ "cortex-m 0.7.4",
+ "critical-section",
+ "embassy-macros 0.1.0 (git+https://github.com/embassy-rs/embassy)",
+ "embedded-hal 0.2.7",
  "futures",
  "heapless",
  "pin-project",
@@ -615,8 +613,8 @@ version = "0.1.0"
 source = "git+https://github.com/embassy-rs/embassy.git?rev=da9c0efaad594b48cfcdf641d353133d14cf98fe#da9c0efaad594b48cfcdf641d353133d14cf98fe"
 dependencies = [
  "defmt",
- "embassy",
- "embedded-storage 0.3.0",
+ "embassy 0.1.0 (git+https://github.com/embassy-rs/embassy.git?rev=da9c0efaad594b48cfcdf641d353133d14cf98fe)",
+ "embedded-storage",
  "embedded-storage-async",
 ]
 
@@ -629,10 +627,10 @@ dependencies = [
  "cortex-m 0.7.4",
  "cortex-m-rt",
  "defmt",
- "embassy",
+ "embassy 0.1.0 (git+https://github.com/embassy-rs/embassy.git?rev=da9c0efaad594b48cfcdf641d353133d14cf98fe)",
  "embassy-boot",
  "embassy-nrf",
- "embedded-storage 0.3.0",
+ "embedded-storage",
  "embedded-storage-async",
  "nrf-softdevice-mbr",
 ]
@@ -643,7 +641,18 @@ version = "0.1.0"
 source = "git+https://github.com/embassy-rs/embassy.git?rev=da9c0efaad594b48cfcdf641d353133d14cf98fe#da9c0efaad594b48cfcdf641d353133d14cf98fe"
 dependencies = [
  "cortex-m 0.7.4",
- "embassy",
+ "embassy 0.1.0 (git+https://github.com/embassy-rs/embassy.git?rev=da9c0efaad594b48cfcdf641d353133d14cf98fe)",
+ "num-traits 0.2.14",
+ "usb-device",
+]
+
+[[package]]
+name = "embassy-hal-common"
+version = "0.1.0"
+source = "git+https://github.com/embassy-rs/embassy#f683b5d4544b5b2095dd9e0530fb0569ab97967e"
+dependencies = [
+ "cortex-m 0.7.4",
+ "embassy 0.1.0 (git+https://github.com/embassy-rs/embassy)",
  "num-traits 0.2.14",
  "usb-device",
 ]
@@ -652,6 +661,17 @@ dependencies = [
 name = "embassy-macros"
 version = "0.1.0"
 source = "git+https://github.com/embassy-rs/embassy.git?rev=da9c0efaad594b48cfcdf641d353133d14cf98fe#da9c0efaad594b48cfcdf641d353133d14cf98fe"
+dependencies = [
+ "darling 0.13.1",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "embassy-macros"
+version = "0.1.0"
+source = "git+https://github.com/embassy-rs/embassy#f683b5d4544b5b2095dd9e0530fb0569ab97967e"
 dependencies = [
  "darling 0.13.1",
  "proc-macro2",
@@ -669,17 +689,18 @@ dependencies = [
  "cortex-m-rt",
  "critical-section",
  "defmt",
- "embassy",
- "embassy-hal-common",
- "embassy-macros",
+ "embassy 0.1.0 (git+https://github.com/embassy-rs/embassy.git?rev=da9c0efaad594b48cfcdf641d353133d14cf98fe)",
+ "embassy-hal-common 0.1.0 (git+https://github.com/embassy-rs/embassy.git?rev=da9c0efaad594b48cfcdf641d353133d14cf98fe)",
+ "embassy-macros 0.1.0 (git+https://github.com/embassy-rs/embassy.git?rev=da9c0efaad594b48cfcdf641d353133d14cf98fe)",
  "embedded-dma",
  "embedded-hal 0.2.7",
  "embedded-hal 1.0.0-alpha.7",
- "embedded-storage 0.3.0",
+ "embedded-hal-async",
+ "embedded-storage",
  "fixed",
  "futures",
  "nrf-usbd",
- "nrf52840-pac 0.11.0",
+ "nrf52840-pac",
  "rand_core",
  "usb-device",
 ]
@@ -721,12 +742,6 @@ dependencies = [
 
 [[package]]
 name = "embedded-storage"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "723dce4e9f25b6e6c5f35628e144794e5b459216ed7da97b7c4b66cdb3fa82ca"
-
-[[package]]
-name = "embedded-storage"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "156d7a2fdd98ebbf9ae579cbceca3058cff946e13f8e17b90e3511db0508c723"
@@ -737,7 +752,7 @@ version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5ff04af74e47e9bb4315bd7aa2b01f3d1b05f33c03a6c4e9c3b20e9ce9cd8d79"
 dependencies = [
- "embedded-storage 0.3.0",
+ "embedded-storage",
 ]
 
 [[package]]
@@ -868,12 +883,6 @@ dependencies = [
  "typenum",
  "version_check",
 ]
-
-[[package]]
-name = "groundhog"
-version = "0.2.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d0a77c02a0368503bc7547ac01c445b058ffd4a80ebb2134dc33fa4ca96541ac"
 
 [[package]]
 name = "group"
@@ -1033,36 +1042,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "nrf-hal-common"
-version = "0.14.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bd37b3fd039327b4005cc0d4ef20bce0a41bf521071774d5adb854e4b1230639"
-dependencies = [
- "cast",
- "cfg-if",
- "cortex-m 0.7.4",
- "embedded-dma",
- "embedded-hal 0.2.7",
- "embedded-storage 0.2.0",
- "fixed",
- "nb 1.0.0",
- "nrf-usbd",
- "nrf52840-pac 0.10.1",
- "rand_core",
- "void",
-]
-
-[[package]]
-name = "nrf-smartled"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f8be56672a09647dff125898d7c45cec690faee4c32fa99c614f3b28416ab8f7"
-dependencies = [
- "nrf52840-hal",
- "smart-leds-trait",
-]
-
-[[package]]
 name = "nrf-softdevice"
 version = "0.1.0"
 source = "git+https://github.com/embassy-rs/nrf-softdevice.git?rev=c584deaf9d9e941f18457934a4a463e078f380ec#c584deaf9d9e941f18457934a4a463e078f380ec"
@@ -1071,15 +1050,15 @@ dependencies = [
  "cortex-m-rt",
  "critical-section",
  "defmt",
- "embassy",
- "embedded-storage 0.3.0",
+ "embassy 0.1.0 (git+https://github.com/embassy-rs/embassy.git?rev=da9c0efaad594b48cfcdf641d353133d14cf98fe)",
+ "embedded-storage",
  "embedded-storage-async",
  "fixed",
  "futures",
  "heapless",
  "nrf-softdevice-macro",
  "nrf-softdevice-s140",
- "nrf52840-pac 0.11.0",
+ "nrf52840-pac",
  "num_enum",
 ]
 
@@ -1127,28 +1106,6 @@ dependencies = [
  "cortex-m 0.7.4",
  "critical-section",
  "usb-device",
- "vcell",
-]
-
-[[package]]
-name = "nrf52840-hal"
-version = "0.14.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b6014bf78354527b06ac5181f8072be98579f97f3d58756b3a3aa858676dac68"
-dependencies = [
- "embedded-hal 0.2.7",
- "nrf-hal-common",
- "nrf52840-pac 0.10.1",
-]
-
-[[package]]
-name = "nrf52840-pac"
-version = "0.10.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "209c71d29ce1c0e9249b59ffff1ff5035c68b65070bf4c1315767fa4c93103ac"
-dependencies = [
- "cortex-m 0.7.4",
- "cortex-m-rt",
  "vcell",
 ]
 
@@ -1351,15 +1308,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f497285884f3fcff424ffc933e56d7cbca511def0c9831a7f9b5f6153e3cc89b"
 
 [[package]]
-name = "rgb"
-version = "0.8.32"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e74fdc210d8f24a7dbfedc13b04ba5764f5232754ccebfdf5fff1bad791ccbc6"
-dependencies = [
- "bytemuck",
-]
-
-[[package]]
 name = "riscv"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1481,24 +1429,6 @@ dependencies = [
  "itoa",
  "ryu",
  "serde 1.0.136",
-]
-
-[[package]]
-name = "smart-leds"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "38dd45fa275f70b4110eac5f5182611ad384f88bb22b68b9a9c3cafd7015290b"
-dependencies = [
- "smart-leds-trait",
-]
-
-[[package]]
-name = "smart-leds-trait"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ebf6d833fa93f16a1c1874e62c2aebe8567e5bdd436d59bf543ed258b6f7a8e3"
-dependencies = [
- "rgb",
 ]
 
 [[package]]

@@ -1,14 +1,17 @@
+use drogue_device::drivers::led::neopixel::NeoPixel;
 use drogue_device::{
     actors::button::ButtonPressed, actors::dfu::*, actors::flash::*, actors::led::Led,
     ActorContext, Address,
 };
 use embassy::executor::Spawner;
-use embassy_nrf::gpio::{AnyPin, Input, Level, OptionalPin, Output, OutputDrive, Pin, Pull};
-use embassy_nrf::peripherals::TIMER1;
+use embassy_nrf::gpio::{AnyPin, Input, Level, Output, OutputDrive, Pin, Pull};
+use embassy_nrf::peripherals::{PWM0, TIMER1};
 use embassy_nrf::{interrupt, Peripherals};
 
+use crate::NUM_LEDS;
+
 pub type UserLed = Led<Output<'static, AnyPin>>;
-pub type MyNeoPixel = NeoPixel<TIMER1>;
+pub type MyNeoPixel = NeoPixel<'static, PWM0, NUM_LEDS>;
 
 pub struct BurrBoard {
     user_led: ActorContext<UserLed>,
@@ -70,13 +73,7 @@ impl BurrBoard {
         );
          */
 
-        let timer = embassy_nrf::timer::Timer::new_awaitable(p.TIMER1, interrupt::take!(TIMER1));
-
-        let neopixel_pin = p.P0_07.degrade();
-        let neopixel = NeoPixel::new(
-            timer,
-            Output::new(neopixel_pin, Level::Low, OutputDrive::Standard),
-        );
+        let mut neopixel = defmt::unwrap!(NeoPixel::<'_, _, NUM_LEDS>::new(p.PWM0, p.P0_13));
 
         BoardPeripherals {
             user_led,

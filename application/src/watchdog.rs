@@ -7,16 +7,13 @@ pub struct Watchdog(pub Duration);
 
 impl Actor for Watchdog {
     type Message<'m> = ();
-    type OnMountFuture<'m, M>
-        where
-            Self: 'm,
-            M: 'm,
-    = impl Future<Output = ()> + 'm;
+    type OnMountFuture<'m, M> = impl Future<Output = ()> + 'm
+    where M: 'm + Inbox<Self>;
 
     fn on_mount<'m, M>(&'m mut self, _: Address<Self>, _: &'m mut M) -> Self::OnMountFuture<'m, M>
-        where
-            M: Inbox<Self> + 'm,
-            Self: 'm,
+    where
+        M: Inbox<Self> + 'm,
+        Self: 'm,
     {
         async move {
             let mut ticker = Ticker::every(self.0);

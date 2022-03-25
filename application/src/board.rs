@@ -1,20 +1,23 @@
+use drogue_device::actors::button::{Button, ButtonPressed};
 use drogue_device::drivers::led::neopixel::NeoPixel;
-use drogue_device::{
-    actors::button::ButtonPressed, actors::dfu::*, actors::flash::*, actors::led::Led,
-    ActorContext, Address,
-};
+use drogue_device::{actors::led::Led, ActorContext, Address};
 use embassy::executor::Spawner;
+use embassy::time::{Duration, Ticker};
 use embassy_nrf::gpio::{AnyPin, Input, Level, Output, OutputDrive, Pin, Pull};
-use embassy_nrf::peripherals::{PWM0, TIMER1};
-use embassy_nrf::{interrupt, Peripherals};
+use embassy_nrf::peripherals::PWM0;
+use embassy_nrf::Peripherals;
 
-use crate::NUM_LEDS;
+use crate::{runner, Runner, NUM_LEDS};
 
 pub type UserLed = Led<Output<'static, AnyPin>>;
 pub type MyNeoPixel = NeoPixel<'static, PWM0, NUM_LEDS>;
+pub type MyRunner = Runner<NUM_LEDS>;
+pub type MyButton = Button<Input<'static, AnyPin>, ButtonPressed<MyRunner>>;
 
 pub struct BurrBoard {
     user_led: ActorContext<UserLed>,
+    runner: ActorContext<MyRunner>,
+    button: ActorContext<MyButton>,
     //flash: ActorContext<SharedFlash<Flash>>,
     //dfu: ActorContext<FirmwareManager<SharedFlashHandle<Flash>>>,
 
@@ -27,13 +30,16 @@ pub struct BoardPeripherals {
     //pub flash: Address<SharedFlash<Flash>>,
 
     //pub dfu: Address<FirmwareManager<SharedFlashHandle<Flash>>>,
-    pub neopixel: MyNeoPixel,
+    pub button: Address<MyButton>,
+    pub runner: Address<MyRunner>,
 }
 
 impl BurrBoard {
     pub const fn new() -> Self {
         Self {
             user_led: ActorContext::new(),
+            button: ActorContext::new(),
+            runner: ActorContext::new(),
             // flash: ActorContext::new(),
             // dfu: ActorContext::new(),
             //control: ActorContext::new(),
@@ -73,13 +79,30 @@ impl BurrBoard {
         );
          */
 
-        let mut neopixel = defmt::unwrap!(NeoPixel::<'_, _, NUM_LEDS>::new(p.PWM0, p.P0_13));
+        //p1.p1_08
+        let mut neopixel = defmt::unwrap!(NeoPixel::<'_, _, NUM_LEDS>::new(p.PWM0, p.P1_08));
+        let runner = self.runner.mount(
+            s,
+            Runner {
+                neopixel,
+                ticker: Ticker::every(Duration::from_millis(250)),
+            },
+        );
+
+        let button = self.button.mount(
+            s,
+            Button::new(
+                Input::new(p.P1_02.degrade(), Pull::Up),
+                ButtonPressed(runner.clone(), runner::Msg::Toggle),
+            ),
+        );
 
         BoardPeripherals {
             user_led,
             //flash,
             //dfu,
-            neopixel,
+            runner,
+            button,
         }
     }
 }

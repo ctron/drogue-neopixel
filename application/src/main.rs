@@ -4,18 +4,16 @@
 #![feature(generic_associated_types)]
 #![feature(type_alias_impl_trait)]
 
+use drogue_device::actors::button::Button;
+use drogue_device::actors::button::ButtonPressed;
 use drogue_device::actors::led::LedMessage;
-use drogue_device::drivers::led::neopixel::{NeoPixel, Rgb8, BLUE, GREEN, RED};
 use drogue_device::ActorContext;
-use embassy::time::Duration;
-use embassy::time::Timer;
-use embassy::util::Forever;
+use embassy::time::{Duration, Ticker};
 use embassy_nrf::config::Config;
 use embassy_nrf::interrupt::Priority;
 use embassy_nrf::Peripherals;
 
-const NUM_LEDS: usize = 8;
-pub const YELLOW: Rgb8 = Rgb8::new(0xFF, 0xFF, 0x00);
+const NUM_LEDS: usize = 60;
 
 #[cfg(feature = "log")]
 use embassy_nrf::{gpio::NoPin, interrupt, uarte};
@@ -37,11 +35,13 @@ use panic_reset as _;
 mod board;
 mod control;
 mod led;
+mod runner;
 mod softdevice;
 mod watchdog;
 
 use board::*;
 //use softdevice::*;
+use runner::*;
 use watchdog::*;
 
 const FIRMWARE_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -91,20 +91,16 @@ async fn main(s: embassy::executor::Spawner, mut p: Peripherals) {
     //let mut neopixel = defmt::unwrap!(NeoPixel::new(p.PWM0, p.P0_16));
     //let mut neopixel = defmt::unwrap!(NeoPixel::<'_, _, 1>::new(p.PWM0, p.P0_16));
 
-    let mut neopixel = ap.neopixel;
+    //let mut neopixel = ap.neopixel;
 
     let mut dir = 1;
 
-    let mut pixels = [BLUE, BLUE, YELLOW, YELLOW, BLUE, BLUE, YELLOW, YELLOW];
+    //let mut pixels = [BLUE, BLUE, YELLOW, YELLOW, BLUE, BLUE, YELLOW, YELLOW];
 
     loop {
         if let Ok(f) = ap.user_led.request(LedMessage::Toggle) {
             f.await;
         }
-
-        neopixel.set(&pixels).await;
-        Timer::after(Duration::from_millis(500)).await;
-        pixels.rotate_right(1);
     }
 }
 

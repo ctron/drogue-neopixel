@@ -1,15 +1,7 @@
-use drogue_device::actors::led::LedMessage::State;
-use drogue_device::actors::led::{Led, LedMessage};
-use drogue_device::kernel::actor::ActorHandle;
-use drogue_device::traits::led::Led as _;
-use drogue_device::{Actor, ActorContext};
 use embassy::executor::Spawner;
-use embassy::time::{Duration, Timer};
-use embassy_nrf::gpio::AnyPin;
 use nrf_softdevice::{raw, Flash, Softdevice};
 
 use crate::board::*;
-use crate::led::StatefulLed;
 
 pub struct SoftdeviceApp {
     sd: &'static Softdevice,

@@ -4,7 +4,6 @@
 #![feature(generic_associated_types)]
 #![feature(type_alias_impl_trait)]
 
-use drogue_device::actors::led::LedMessage;
 use drogue_device::ActorContext;
 use embassy::time::Duration;
 use embassy::util::Forever;
@@ -39,11 +38,11 @@ mod gatt;
 mod led;
 mod runner;
 //mod softdevice;
+mod pattern;
 mod watchdog;
 
 use app::*;
 use board::*;
-use gatt::*;
 use runner::*;
 //use softdevice::*;
 use controller::*;
@@ -62,7 +61,7 @@ fn config() -> Config {
 
 #[embassy::main(config = "config()")]
 //#[embassy::main]
-async fn main(s: embassy::executor::Spawner, mut p: Peripherals) {
+async fn main(s: embassy::executor::Spawner, p: Peripherals) {
     static APP: Forever<App> = Forever::new();
     let app = APP.put(App::enable(s, "Neopixel"));
 
@@ -82,7 +81,7 @@ async fn main(s: embassy::executor::Spawner, mut p: Peripherals) {
     // Setup burrboard peripherals
     static BOARD: BurrBoard = BurrBoard::new();
 
-    let mut ap = BOARD.mount(s, /*app, */ p);
+    let ap = BOARD.mount(s, /*app, */ p);
 
     // Launch the application
     app.mount(s, &ap);
@@ -98,15 +97,16 @@ async fn main(s: embassy::executor::Spawner, mut p: Peripherals) {
 
     //let mut neopixel = ap.neopixel;
 
-    let mut dir = 1;
+    //let dir = 1;
 
     //let mut pixels = [BLUE, BLUE, YELLOW, YELLOW, BLUE, BLUE, YELLOW, YELLOW];
 
+    /*
     loop {
         if let Ok(f) = ap.user_led.request(LedMessage::Toggle) {
             f.await;
         }
-    }
+    }*/
 }
 
 #[allow(unused)]

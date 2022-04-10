@@ -1,4 +1,4 @@
-use crate::{Controller, ModeDiscriminants, MyNeoPixel};
+use crate::{pattern::ModeDiscriminants, Controller, MyNeoPixel};
 use core::future::Future;
 use drogue_device::{Actor, Address, Inbox};
 use embassy::time::Ticker;
@@ -53,7 +53,7 @@ impl<const N: usize> Actor for Runner<N> {
                             }
                         }
                     }
-                    Either::Right((_, d)) => {
+                    Either::Right((_, _d)) => {
                         controller.tick(&mut self.neopixel).await;
                     }
                 }

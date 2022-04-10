@@ -8,7 +8,8 @@ use nrf_softdevice::Softdevice;
 use embassy::time::Duration;
 
 use crate::board::*;
-use crate::{runner, ModeDiscriminants};
+use crate::pattern::ModeDiscriminants;
+use crate::runner;
 use embassy::time::Ticker;
 use futures::{future::select, future::Either, pin_mut, StreamExt};
 use heapless::Vec;
@@ -45,20 +46,20 @@ pub struct DeviceInformationService {
 
 pub struct BurrBoardMonitor {
     ticker: Ticker,
-    service: &'static BurrBoardService,
+    _service: &'static BurrBoardService,
     runner: Address<MyRunner>,
     connections: Vec<Connection, 2>,
-    notifications: bool,
+    _notifications: bool,
 }
 
 impl BurrBoardMonitor {
     pub fn new(service: &'static BurrBoardService, runner: Address<MyRunner>) -> Self {
         Self {
-            service,
+            _service: service,
             connections: Vec::new(),
             ticker: Ticker::every(Duration::from_secs(1)),
             runner,
-            notifications: false,
+            _notifications: false,
         }
     }
 

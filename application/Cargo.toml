@@ -40,6 +40,11 @@ strum = { version = "0.24", default-features = false, features = ["derive"] }
 #nrf-smartled = { version = "0.5.0", features= ["52840"] }
 #choreographer = "0.0.4"
 
+[dependencies.palette]
+version = "0.6"
+default-features = false
+features = ["libm"] # Uses libm instead of std for floating point math
+
 [features]
 default = ["panic-reset", "with_defmt"]
 lsm = []

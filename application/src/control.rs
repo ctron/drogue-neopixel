@@ -1,16 +1,17 @@
-use crate::softdevice::SoftdeviceApp;
+//use crate::softdevice::SoftdeviceApp;
+use crate::App;
 use core::future::Future;
 use drogue_device::{Actor, Address, Inbox};
 use embassy::time::{Duration, Instant};
 use embassy_nrf::gpio::{AnyPin, Input};
 
 pub struct ControlButton {
-    app: &'static SoftdeviceApp,
+    app: &'static App,
     button: Input<'static, AnyPin>,
 }
 
 impl ControlButton {
-    pub fn new(app: &'static SoftdeviceApp, button: Input<'static, AnyPin>) -> Self {
+    pub fn new(app: &'static App, button: Input<'static, AnyPin>) -> Self {
         Self { app, button }
     }
 }

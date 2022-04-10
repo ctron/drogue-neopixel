@@ -10,7 +10,7 @@ use embassy_nrf::Peripherals;
 use crate::{runner, Runner, NUM_LEDS};
 
 pub type UserLed = Led<Output<'static, AnyPin>>;
-pub type MyNeoPixel = NeoPixel<'static, PWM0, NUM_LEDS>;
+pub type MyNeoPixel<const N: usize> = NeoPixel<'static, PWM0, N>;
 pub type MyRunner = Runner<NUM_LEDS>;
 pub type MyButton = Button<Input<'static, AnyPin>, ButtonPressed<MyRunner>>;
 
@@ -80,7 +80,7 @@ impl BurrBoard {
          */
 
         //p1.p1_08
-        let mut neopixel = defmt::unwrap!(NeoPixel::<'_, _, NUM_LEDS>::new(p.PWM0, p.P1_08));
+        let neopixel = defmt::unwrap!(NeoPixel::<'_, _, NUM_LEDS>::new(p.PWM0, p.P1_08));
         let runner = self.runner.mount(
             s,
             Runner {

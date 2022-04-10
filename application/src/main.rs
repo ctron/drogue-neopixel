@@ -4,11 +4,10 @@
 #![feature(generic_associated_types)]
 #![feature(type_alias_impl_trait)]
 
-use drogue_device::actors::button::Button;
-use drogue_device::actors::button::ButtonPressed;
 use drogue_device::actors::led::LedMessage;
 use drogue_device::ActorContext;
-use embassy::time::{Duration, Ticker};
+use embassy::time::Duration;
+use embassy::util::Forever;
 use embassy_nrf::config::Config;
 use embassy_nrf::interrupt::Priority;
 use embassy_nrf::Peripherals;
@@ -32,16 +31,22 @@ mod logger;
 #[cfg(not(feature = "defmt"))]
 use panic_reset as _;
 
+mod app;
 mod board;
-mod control;
+mod controller;
+//mod control;
+mod gatt;
 mod led;
 mod runner;
-mod softdevice;
+//mod softdevice;
 mod watchdog;
 
+use app::*;
 use board::*;
-//use softdevice::*;
+use gatt::*;
 use runner::*;
+//use softdevice::*;
+use controller::*;
 use watchdog::*;
 
 const FIRMWARE_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -55,11 +60,11 @@ fn config() -> Config {
     config
 }
 
-//#[embassy::main(config = "config()")]
-#[embassy::main]
+#[embassy::main(config = "config()")]
+//#[embassy::main]
 async fn main(s: embassy::executor::Spawner, mut p: Peripherals) {
-    //static APP: Forever<SoftdeviceApp> = Forever::new();
-    //let app = APP.put(SoftdeviceApp::enable(s, "BurrBoard"));
+    static APP: Forever<App> = Forever::new();
+    let app = APP.put(App::enable(s, "Neopixel"));
 
     #[cfg(feature = "log")]
     {
@@ -79,8 +84,8 @@ async fn main(s: embassy::executor::Spawner, mut p: Peripherals) {
 
     let mut ap = BOARD.mount(s, /*app, */ p);
 
-    // Launch the selected application
-    // app.mount(s, &ap);
+    // Launch the application
+    app.mount(s, &ap);
 
     // Launch watchdog
     static WATCHDOG: ActorContext<Watchdog> = ActorContext::new();

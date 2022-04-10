@@ -1,3 +1,5 @@
+# Neopixel example with Drogue IoT device
+
 Run:
 
 ```shell

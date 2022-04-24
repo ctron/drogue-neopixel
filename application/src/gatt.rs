@@ -28,6 +28,9 @@ pub struct BurrBoardService {
     #[characteristic(uuid = "2ae2", read, write)]
     pub direction: u8,
 
+    #[characteristic(uuid = "2ae3", read, write)]
+    pub sleep: u16,
+
     #[characteristic(uuid = "1b25", read, write)]
     pub report_interval: u16,
 }
@@ -87,11 +90,23 @@ impl BurrBoardMonitor {
                 self.ticker = Ticker::every(Duration::from_millis(*period as u64));
             }
 
+            BurrBoardServiceEvent::SleepWrite(duration) => {
+                info!("Starting sleep: {}s", *duration);
+                if *duration <= 0 {
+                    self.runner.notify(runner::Msg::StopSleep).ok();
+                } else {
+                    let sleep = Duration::from_secs(*duration as _);
+                    self.runner.notify(runner::Msg::StartSleep(sleep)).ok();
+                }
+            }
+
             BurrBoardServiceEvent::DirectionWrite(val) => {
                 info!("Direction: {}", val);
                 let mode = match val {
                     0 => ModeDiscriminants::UA,
                     1 => ModeDiscriminants::DE,
+                    2 => ModeDiscriminants::Rainbow,
+                    3 => ModeDiscriminants::RainbowPart,
                     _ => ModeDiscriminants::Off,
                 };
 

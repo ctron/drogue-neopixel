@@ -1,5 +1,5 @@
 use crate::MyNeoPixel;
-use drogue_device::drivers::led::neopixel::{Brightness, Rgb8};
+use drogue_device::drivers::led::neopixel::{Filter, Rgb8};
 use palette::rgb::Rgb;
 use palette::{Hsv, IntoColor};
 
@@ -39,11 +39,45 @@ impl<const N: usize> Rainbow<N> {
         Self {}
     }
 
-    pub async fn tick(&self, pixels: &mut [Rgb8; N], neopixel: &mut MyNeoPixel<N>) {
+    pub async fn tick<F: Filter>(
+        &self,
+        pixels: &mut [Rgb8; N],
+        neopixel: &mut MyNeoPixel<N>,
+        f: &mut F,
+    ) {
         pixels.rotate_left(1);
-        neopixel
-            .set_with_filter(&pixels, &mut Brightness(16))
-            .await
-            .ok();
+        neopixel.set_with_filter(&pixels, f).await.ok();
+    }
+}
+
+pub struct RainbowPart<const N: usize, const MAX: usize> {
+    state: usize,
+}
+
+impl<const N: usize, const MAX: usize> RainbowPart<N, MAX> {
+    pub fn new(_pixels: &mut [Rgb8; N]) -> Self {
+        Self { state: 0 }
+    }
+
+    pub async fn tick<F: Filter>(
+        &mut self,
+        pixels: &mut [Rgb8; N],
+        neopixel: &mut MyNeoPixel<N>,
+        f: &mut F,
+    ) {
+        for i in 0..N {
+            let v = (360f32 / (MAX as f32)) * ((i + self.state) as f32);
+
+            let color = Hsv::new(v, 1.0, 1.0);
+            let color: Rgb = color.into_color();
+            pixels[i] = color.into_pixel();
+        }
+
+        neopixel.set_with_filter(&pixels, f).await.ok();
+
+        self.state += 1;
+        if self.state > MAX {
+            self.state = 0;
+        }
     }
 }

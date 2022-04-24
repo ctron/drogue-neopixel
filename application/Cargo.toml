@@ -9,6 +9,8 @@ resolver = "2"
 defmt = { version = "0.3", optional = true }
 panic-probe = { version = "0.3", features = ["print-defmt"], optional = true }
 
+num = { version = "0.4", default-features = false }
+
 # For uart logging
 log = { version = "0.4", optional = true }
 panic-reset = { version = "0.1.1", optional = true }

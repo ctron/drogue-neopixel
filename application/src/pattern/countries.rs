@@ -1,6 +1,6 @@
 use crate::pattern::YELLOW;
 use crate::MyNeoPixel;
-use drogue_device::drivers::led::neopixel::{Brightness, Rgb8, BLACK, BLUE, RED};
+use drogue_device::drivers::led::neopixel::{Filter, Rgb8, BLACK, BLUE, RED};
 
 pub struct UA<const N: usize>;
 
@@ -12,12 +12,14 @@ impl<const N: usize> UA<N> {
         Self
     }
 
-    pub async fn tick(&mut self, pixels: &mut [Rgb8; N], neopixel: &mut MyNeoPixel<N>) {
+    pub async fn tick<F: Filter>(
+        &mut self,
+        pixels: &mut [Rgb8; N],
+        neopixel: &mut MyNeoPixel<N>,
+        f: &mut F,
+    ) {
         pixels.rotate_right(1);
-        neopixel
-            .set_with_filter(&pixels, &mut Brightness(16))
-            .await
-            .ok();
+        neopixel.set_with_filter(&pixels, f).await.ok();
     }
 }
 
@@ -36,11 +38,13 @@ impl<const N: usize> DE<N> {
         Self
     }
 
-    pub async fn tick(&mut self, pixels: &mut [Rgb8; N], neopixel: &mut MyNeoPixel<N>) {
+    pub async fn tick<F: Filter>(
+        &mut self,
+        pixels: &mut [Rgb8; N],
+        neopixel: &mut MyNeoPixel<N>,
+        f: &mut F,
+    ) {
         pixels.rotate_left(1);
-        neopixel
-            .set_with_filter(&pixels, &mut Brightness(16))
-            .await
-            .ok();
+        neopixel.set_with_filter(&pixels, f).await.ok();
     }
 }

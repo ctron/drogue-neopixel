@@ -1,9 +1,11 @@
 use crate::{pattern::ModeDiscriminants, Controller, MyNeoPixel};
 use core::future::Future;
 use drogue_device::{Actor, Address, Inbox};
-use embassy::time::Ticker;
-use futures::future::{select, Either};
-use futures::{pin_mut, StreamExt};
+use embassy::time::{Duration, Ticker};
+use futures::{
+    future::{select, Either},
+    pin_mut, StreamExt,
+};
 
 pub struct Runner<const N: usize> {
     pub ticker: Ticker,
@@ -14,6 +16,8 @@ pub struct Runner<const N: usize> {
 pub enum Msg {
     Toggle,
     SetMode(ModeDiscriminants),
+    StartSleep(Duration),
+    StopSleep,
 }
 
 impl<const N: usize> Actor for Runner<N> {
@@ -49,6 +53,12 @@ impl<const N: usize> Actor for Runner<N> {
                                 }
                                 Msg::SetMode(mode) => {
                                     controller.mode(*mode);
+                                }
+                                Msg::StartSleep(duration) => {
+                                    controller.start_sleep(*duration);
+                                }
+                                Msg::StopSleep => {
+                                    controller.stop_sleep();
                                 }
                             }
                         }

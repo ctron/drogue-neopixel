@@ -32,8 +32,8 @@ use panic_reset as _;
 
 mod app;
 mod board;
+mod control;
 mod controller;
-//mod control;
 mod gatt;
 mod led;
 mod runner;
@@ -47,9 +47,6 @@ use runner::*;
 //use softdevice::*;
 use controller::*;
 use watchdog::*;
-
-const FIRMWARE_VERSION: &str = env!("CARGO_PKG_VERSION");
-const FIRMWARE_REVISION: Option<&str> = option_env!("REVISION");
 
 // Application must run at a lower priority than softdevice
 fn config() -> Config {

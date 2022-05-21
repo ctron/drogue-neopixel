@@ -1,3 +1,4 @@
+use crate::control::ControlButtons;
 use drogue_device::actors::button::{Button, ButtonPressed};
 use drogue_device::drivers::led::neopixel::NeoPixel;
 use drogue_device::{actors::led::Led, ActorContext, Address};
@@ -13,11 +14,13 @@ pub type UserLed = Led<Output<'static, AnyPin>>;
 pub type MyNeoPixel<const N: usize> = NeoPixel<'static, PWM0, N>;
 pub type MyRunner = Runner<NUM_LEDS>;
 pub type MyButton = Button<Input<'static, AnyPin>, ButtonPressed<MyRunner>>;
+pub type MyControlButtons = ControlButtons<MyRunner>;
 
 pub struct BurrBoard {
     user_led: ActorContext<UserLed>,
     runner: ActorContext<MyRunner>,
     button: ActorContext<MyButton>,
+    control: ActorContext<MyControlButtons>,
     //flash: ActorContext<SharedFlash<Flash>>,
     //dfu: ActorContext<FirmwareManager<SharedFlashHandle<Flash>>>,
 
@@ -32,6 +35,7 @@ pub struct BoardPeripherals {
     //pub dfu: Address<FirmwareManager<SharedFlashHandle<Flash>>>,
     pub button: Address<MyButton>,
     pub runner: Address<MyRunner>,
+    pub control: Address<MyControlButtons>,
 }
 
 impl BurrBoard {
@@ -40,9 +44,9 @@ impl BurrBoard {
             user_led: ActorContext::new(),
             button: ActorContext::new(),
             runner: ActorContext::new(),
+            control: ActorContext::new(),
             // flash: ActorContext::new(),
             // dfu: ActorContext::new(),
-            //control: ActorContext::new(),
         }
     }
 
@@ -97,12 +101,26 @@ impl BurrBoard {
             ),
         );
 
+        let control = self.control.mount(
+            s,
+            MyControlButtons::new(
+                runner,
+                (
+                    Input::new(p.P0_26.degrade(), Pull::Up),
+                    Input::new(p.P0_06.degrade(), Pull::Up),
+                    Input::new(p.P0_08.degrade(), Pull::Up),
+                    Input::new(p.P0_27.degrade(), Pull::Up),
+                ),
+            ),
+        );
+
         BoardPeripherals {
             user_led,
             //flash,
             //dfu,
             runner,
             button,
+            control,
         }
     }
 }

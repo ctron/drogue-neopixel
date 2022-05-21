@@ -1,25 +1,52 @@
 //use crate::softdevice::SoftdeviceApp;
-use crate::App;
 use core::future::Future;
 use drogue_device::{Actor, Address, Inbox};
-use embassy::time::{Duration, Instant};
 use embassy_nrf::gpio::{AnyPin, Input};
+use futures::future::{select, Either};
+use futures::pin_mut;
 
-pub struct ControlButton {
-    app: &'static App,
-    button: Input<'static, AnyPin>,
+#[derive(Clone, Copy, Debug)]
+pub enum ControlEvent {
+    Next,
 }
 
-impl ControlButton {
-    pub fn new(app: &'static App, button: Input<'static, AnyPin>) -> Self {
-        Self { app, button }
+pub struct ControlButtons<H>
+where
+    H: Actor + 'static,
+{
+    handler: Address<H>,
+    buttons: (
+        Input<'static, AnyPin>,
+        Input<'static, AnyPin>,
+        Input<'static, AnyPin>,
+        Input<'static, AnyPin>,
+    ),
+}
+
+impl<H> ControlButtons<H>
+where
+    H: Actor + 'static,
+{
+    pub fn new(
+        handler: Address<H>,
+        buttons: (
+            Input<'static, AnyPin>,
+            Input<'static, AnyPin>,
+            Input<'static, AnyPin>,
+            Input<'static, AnyPin>,
+        ),
+    ) -> Self {
+        Self { handler, buttons }
     }
 }
 
-impl Actor for ControlButton {
+impl<H> Actor for ControlButtons<H>
+where
+    H: Actor + 'static,
+    H::Message<'static>: TryFrom<ControlEvent>,
+{
     type OnMountFuture<'m, M> = impl Future<Output = ()> + 'm
-    where
-    M: 'm + Inbox<Self>;
+    where M: 'm + Inbox<Self>;
 
     fn on_mount<'m, M>(&'m mut self, _: Address<Self>, _: &'m mut M) -> Self::OnMountFuture<'m, M>
     where
@@ -28,12 +55,11 @@ impl Actor for ControlButton {
     {
         async move {
             loop {
-                self.button.wait_for_low().await;
-                let now = Instant::now();
-                self.button.wait_for_high().await;
-                self.button.wait_for_low().await;
-                if Instant::now() - now < Duration::from_millis(300) {
-                    //self.app.switch();
+                self.buttons.3.wait_for_rising_edge().await;
+
+                defmt::info!("Button");
+                if let Ok(event) = H::Message::try_from(ControlEvent::Next) {
+                    let _ = self.handler.notify(event);
                 }
             }
         }

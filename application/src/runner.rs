@@ -1,3 +1,4 @@
+use crate::control::ControlEvent;
 use crate::{pattern::ModeDiscriminants, Controller, MyNeoPixel};
 use core::future::Future;
 use drogue_device::{Actor, Address, Inbox};
@@ -69,5 +70,14 @@ impl<const N: usize> Actor for Runner<N> {
                 }
             }
         }
+    }
+}
+
+impl TryFrom<ControlEvent> for Msg {
+    type Error = ();
+
+    fn try_from(value: ControlEvent) -> Result<Self, Self::Error> {
+        defmt::info!("Control button: {0}", defmt::Debug2Format(&value));
+        Err(())
     }
 }

@@ -51,7 +51,7 @@ impl App {
         }
     }
 
-    pub fn mount(&'static self, s: Spawner, p: &BoardPeripherals) {
+    pub fn mount(&'static self, s: Spawner, p: &BoardActors) {
         self.app.mount(s, self.sd, p);
     }
 }

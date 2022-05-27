@@ -1,6 +1,7 @@
 //use crate::softdevice::SoftdeviceApp;
 use core::future::Future;
 use drogue_device::{Actor, Address, Inbox};
+use embassy::time::{Duration, Instant};
 use embassy_nrf::gpio::{AnyPin, Input};
 use futures::future::{select, Either};
 use futures::pin_mut;
@@ -55,13 +56,36 @@ where
     {
         async move {
             loop {
-                self.buttons.3.wait_for_rising_edge().await;
+                let f1 = pushed(&mut self.buttons.0);
+                let f2 = pushed(&mut self.buttons.1);
 
-                defmt::info!("Button");
-                if let Ok(event) = H::Message::try_from(ControlEvent::Next) {
-                    let _ = self.handler.notify(event);
+                pin_mut!(f1);
+                pin_mut!(f2);
+
+                match select(f1, f2).await {
+                    Either::Left(_) => {
+                        defmt::info!("Button 1");
+                        if let Ok(event) = H::Message::try_from(ControlEvent::Next) {
+                            let _ = self.handler.notify(event);
+                        }
+                    }
+                    Either::Right(_) => {
+                        defmt::info!("Button 2");
+                    }
                 }
             }
+        }
+    }
+}
+
+async fn pushed(input: &mut Input<'static, AnyPin>) {
+    loop {
+        input.wait_for_high().await;
+        input.wait_for_low().await;
+        let now = Instant::now();
+        input.wait_for_high().await;
+        if Instant::now() - now > Duration::from_millis(100) {
+            return;
         }
     }
 }

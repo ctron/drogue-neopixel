@@ -15,7 +15,7 @@ pub struct Runner<const N: usize> {
 
 #[derive(Copy, Clone)]
 pub enum Msg {
-    Toggle,
+    Next,
     SetMode(ModeDiscriminants),
     StartSleep(Duration),
     StopSleep,
@@ -49,7 +49,7 @@ impl<const N: usize> Actor for Runner<N> {
                     Either::Left((r, _)) => {
                         if let Some(mut m) = r {
                             match m.message() {
-                                Msg::Toggle => {
+                                Msg::Next => {
                                     controller.next();
                                 }
                                 Msg::SetMode(mode) => {
@@ -78,6 +78,6 @@ impl TryFrom<ControlEvent> for Msg {
 
     fn try_from(value: ControlEvent) -> Result<Self, Self::Error> {
         defmt::info!("Control button: {0}", defmt::Debug2Format(&value));
-        Err(())
+        Ok(Msg::Next)
     }
 }

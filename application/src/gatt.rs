@@ -275,7 +275,7 @@ impl GattApp {
         }
     }
 
-    pub fn mount(&'static self, s: Spawner, sd: &'static Softdevice, p: &BoardPeripherals) {
+    pub fn mount(&'static self, s: Spawner, sd: &'static Softdevice, p: &BoardActors) {
         let monitor = self
             .monitor
             .mount(s, BurrBoardMonitor::new(&self.server.board, p.runner));

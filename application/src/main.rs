@@ -4,8 +4,9 @@
 #![feature(generic_associated_types)]
 #![feature(type_alias_impl_trait)]
 
+use core::future::Future;
 use drogue_device::ActorContext;
-use embassy::time::Duration;
+use embassy::time::{Duration, Instant, Timer};
 use embassy::util::Forever;
 use embassy_nrf::config::Config;
 use embassy_nrf::interrupt::Priority;
@@ -13,8 +14,12 @@ use embassy_nrf::Peripherals;
 
 const NUM_LEDS: usize = 60;
 
+use drogue_device::drivers::led::neopixel::NeoPixel;
+use embassy_nrf::gpio::{AnyPin, Input, Level, Output, OutputDrive, Pin, Pull};
 #[cfg(feature = "log")]
 use embassy_nrf::{gpio::NoPin, interrupt, uarte};
+use futures::future::{select, Either};
+use futures::pin_mut;
 
 mod fmt;
 
@@ -59,9 +64,6 @@ fn config() -> Config {
 #[embassy::main(config = "config()")]
 //#[embassy::main]
 async fn main(s: embassy::executor::Spawner, p: Peripherals) {
-    static APP: Forever<App> = Forever::new();
-    let app = APP.put(App::enable(s, "Neopixel"));
-
     #[cfg(feature = "log")]
     {
         logger::init(uarte::Uarte::new(
@@ -78,10 +80,37 @@ async fn main(s: embassy::executor::Spawner, p: Peripherals) {
     // Setup burrboard peripherals
     static BOARD: BurrBoard = BurrBoard::new();
 
-    let ap = BOARD.mount(s, /*app, */ p);
+    let mut buttons = (
+        Input::new(p.P0_26.degrade(), Pull::Up),
+        Input::new(p.P0_06.degrade(), Pull::Up),
+        Input::new(p.P0_08.degrade(), Pull::Up),
+        Input::new(p.P0_27.degrade(), Pull::Up),
+    );
 
-    // Launch the application
-    app.mount(s, &ap);
+    let mut user_led = Output::new(p.P1_10.degrade(), Level::Low, OutputDrive::Standard);
+    let enable_ble = enable_ble(&mut buttons.0, &mut user_led).await;
+
+    let ap = BOARD.mount(
+        s,
+        /*app, */
+        BoardPeripherals {
+            buttons,
+            neopixel: defmt::unwrap!(NeoPixel::<'_, _, NUM_LEDS>::new(p.PWM0, p.P1_08)),
+        },
+    );
+
+    // Launch the softdevice
+    if enable_ble {
+        info!("Enable BLE");
+        user_led.set_high();
+
+        static LED: Forever<Output<'static, AnyPin>> = Forever::new();
+        LED.put(user_led);
+
+        static APP: Forever<App> = Forever::new();
+        let app = APP.put(App::enable(s, "Neopixel"));
+        app.mount(s, &ap);
+    }
 
     // Launch watchdog
     static WATCHDOG: ActorContext<Watchdog> = ActorContext::new();
@@ -112,4 +141,39 @@ pub fn log_stack(file: &'static str) {
     let _u: u32 = 1;
     let _uptr: *const u32 = &_u;
     info!("[{}] SP: 0x{:?}", file, &_uptr);
+}
+
+async fn enable_ble(
+    button: &mut Input<'static, AnyPin>,
+    led: &mut Output<'static, AnyPin>,
+) -> bool {
+    // startup led
+
+    defmt::info!(
+        "Button 1 - high: {}, low: {}",
+        button.is_high(),
+        button.is_low()
+    );
+
+    if button.is_low() {
+        defmt::info!("Button 1 is pressed, waiting ...");
+
+        let time = Timer::after(Duration::from_secs(1));
+        let button = button.wait_for_high();
+
+        pin_mut!(button);
+
+        match select(time, button).await {
+            Either::Left(_) => {
+                // timeout
+                true
+            }
+            Either::Right(_) => {
+                // button release
+                false
+            }
+        }
+    } else {
+        false
+    }
 }

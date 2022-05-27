@@ -30,6 +30,10 @@ impl<const N: usize> Controller<N> {
         self.mode(ModeDiscriminants::from(&self.mode).next());
     }
 
+    pub fn prev(&mut self) {
+        self.mode(ModeDiscriminants::from(&self.mode).prev());
+    }
+
     pub async fn tick(&mut self, neopixel: &mut MyNeoPixel<N>) {
         let mut f = if let Some(sleep) = &self.sleep {
             Brightness(sleep.remaining_now())

@@ -10,11 +10,12 @@ use crate::{
     MyNeoPixel,
 };
 use drogue_device::drivers::led::neopixel::{Filter, Rgb8};
-use strum::EnumDiscriminants;
+use strum::{EnumDiscriminants, EnumIter, IntoEnumIterator};
 
 pub const YELLOW: Rgb8 = Rgb8::new(0xFF, 0xFF, 0x00);
 
 #[derive(EnumDiscriminants)]
+#[strum_discriminants(derive(EnumIter))]
 pub enum Mode<const N: usize> {
     Off,
     UA(UA<N>),
@@ -25,13 +26,31 @@ pub enum Mode<const N: usize> {
 
 impl ModeDiscriminants {
     pub fn next(&self) -> Self {
-        match self {
-            Self::Off => Self::UA,
-            Self::UA => Self::DE,
-            Self::DE => Self::Rainbow,
-            Self::Rainbow => Self::RainbowPart,
-            Self::RainbowPart => Self::UA,
+        let mut it = ModeDiscriminants::iter().skip(1);
+
+        let mut next = None;
+        while let Some(i) = it.next() {
+            if i == *self {
+                next = it.next();
+                break;
+            }
         }
+
+        next.unwrap_or(Self::UA)
+    }
+
+    pub fn prev(&self) -> Self {
+        let mut it = ModeDiscriminants::iter().skip(1).rev();
+
+        let mut next = None;
+        while let Some(i) = it.next() {
+            if i == *self {
+                next = it.next();
+                break;
+            }
+        }
+
+        next.unwrap_or(Self::RainbowPart)
     }
 
     pub fn new<const N: usize>(&self, pixels: &mut [Rgb8; N]) -> Mode<N> {

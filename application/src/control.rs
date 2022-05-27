@@ -9,6 +9,7 @@ use futures::pin_mut;
 #[derive(Clone, Copy, Debug)]
 pub enum ControlEvent {
     Next,
+    Prev,
 }
 
 pub struct ControlButtons<H>
@@ -71,6 +72,9 @@ where
                     }
                     Either::Right(_) => {
                         defmt::info!("Button 2");
+                        if let Ok(event) = H::Message::try_from(ControlEvent::Prev) {
+                            let _ = self.handler.notify(event);
+                        }
                     }
                 }
             }

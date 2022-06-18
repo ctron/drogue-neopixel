@@ -9,7 +9,7 @@ use crate::{
     },
     MyNeoPixel,
 };
-use drogue_device::drivers::led::neopixel::{Filter, Rgb8};
+use drogue_device::drivers::led::neopixel::{filter::Filter, rgb::Rgb8};
 use strum::{EnumDiscriminants, EnumIter, IntoEnumIterator};
 
 pub const YELLOW: Rgb8 = Rgb8::new(0xFF, 0xFF, 0x00);
@@ -65,7 +65,7 @@ impl ModeDiscriminants {
 }
 
 impl<const N: usize> Mode<N> {
-    pub async fn tick<F: Filter>(
+    pub async fn tick<F: Filter<Rgb8, 3>>(
         &mut self,
         pixels: &mut [Rgb8; N],
         neopixel: &mut MyNeoPixel<N>,

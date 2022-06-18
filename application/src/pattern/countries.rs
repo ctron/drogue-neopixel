@@ -1,6 +1,9 @@
 use crate::pattern::YELLOW;
 use crate::MyNeoPixel;
-use drogue_device::drivers::led::neopixel::{Filter, Rgb8, BLACK, BLUE, RED};
+use drogue_device::drivers::led::neopixel::{
+    filter::Filter,
+    rgb::{Rgb8, BLACK, BLUE, RED},
+};
 
 pub struct UA<const N: usize>;
 
@@ -12,7 +15,7 @@ impl<const N: usize> UA<N> {
         Self
     }
 
-    pub async fn tick<F: Filter>(
+    pub async fn tick<F: Filter<Rgb8, 3>>(
         &mut self,
         pixels: &mut [Rgb8; N],
         neopixel: &mut MyNeoPixel<N>,
@@ -38,7 +41,7 @@ impl<const N: usize> DE<N> {
         Self
     }
 
-    pub async fn tick<F: Filter>(
+    pub async fn tick<F: Filter<Rgb8, 3>>(
         &mut self,
         pixels: &mut [Rgb8; N],
         neopixel: &mut MyNeoPixel<N>,

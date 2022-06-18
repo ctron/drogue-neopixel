@@ -1,6 +1,6 @@
 [package]
 edition = "2021"
-name = "burrboard-firmware"
+name = "neopixel-firmware"
 version = "0.1.0"
 authors = ["Ulf Lilleengen <lulf@redhat.com>"]
 resolver = "2"
@@ -20,10 +20,10 @@ cortex-m-rt = "0.7"
 
 embassy = { version = "0.1.0", default-features = false, features = ["defmt"] }
 embassy-nrf = { version = "0.1.0", default-features = false, features = ["nrf52840", "time-driver-rtc1", "gpiote", "unstable-pac", "unstable-traits"] }
-drogue-device = { version = "0.1.0", default-features = false, features = ["time", "dfu", "ble+nrf52840", "neopixel", "defmt", "nrf", "nrf-usbd"] }
 embassy-boot-nrf = { version = "0.1.0", features = ["softdevice"] }
 embassy-boot = { version = "0.1.0" }
 embedded-hal = { version = "0.2", features = ["unproven"] }
+ector = { version = "0.1.0", default-features = false }
 futures = { version = "0.3.17", default-features = false, features = ["async-await"] }
 
 nrf-softdevice = { version = "0.1.0", features = ["ble-peripheral", "ble-central", "ble-gatt-server", "s140", "nrf52840", "critical-section-impl"] }
@@ -37,6 +37,16 @@ strum = { version = "0.24", default-features = false, features = ["derive"] }
 
 #nrf-smartled = { version = "0.5.0", features= ["52840"] }
 #choreographer = "0.0.4"
+
+[dependencies.drogue-device]
+version = "0.1.0"
+default-features = false
+features = [
+    "time",
+    "neopixel",
+    "nrf",
+    "ble+nrf52840"
+]
 
 [dependencies.palette]
 version = "0.6"

@@ -1,5 +1,5 @@
 use crate::MyNeoPixel;
-use drogue_device::drivers::led::neopixel::{Filter, Rgb8};
+use drogue_device::drivers::led::neopixel::{filter::Filter, rgb::Rgb8};
 use palette::rgb::Rgb;
 use palette::{Hsv, IntoColor};
 
@@ -39,7 +39,7 @@ impl<const N: usize> Rainbow<N> {
         Self {}
     }
 
-    pub async fn tick<F: Filter>(
+    pub async fn tick<F: Filter<Rgb8, 3>>(
         &self,
         pixels: &mut [Rgb8; N],
         neopixel: &mut MyNeoPixel<N>,
@@ -59,7 +59,7 @@ impl<const N: usize, const MAX: usize> RainbowPart<N, MAX> {
         Self { state: 0 }
     }
 
-    pub async fn tick<F: Filter>(
+    pub async fn tick<F: Filter<Rgb8, 3>>(
         &mut self,
         pixels: &mut [Rgb8; N],
         neopixel: &mut MyNeoPixel<N>,

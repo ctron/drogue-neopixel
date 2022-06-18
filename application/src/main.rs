@@ -4,9 +4,8 @@
 #![feature(generic_associated_types)]
 #![feature(type_alias_impl_trait)]
 
-use core::future::Future;
-use drogue_device::ActorContext;
-use embassy::time::{Duration, Instant, Timer};
+use ector::ActorContext;
+use embassy::time::{Duration, Timer};
 use embassy::util::Forever;
 use embassy_nrf::config::Config;
 use embassy_nrf::interrupt::Priority;
@@ -14,7 +13,7 @@ use embassy_nrf::Peripherals;
 
 const NUM_LEDS: usize = 60;
 
-use drogue_device::drivers::led::neopixel::NeoPixel;
+use drogue_device::drivers::led::neopixel::rgb::NeoPixelRgb;
 use embassy_nrf::gpio::{AnyPin, Input, Level, Output, OutputDrive, Pin, Pull};
 #[cfg(feature = "log")]
 use embassy_nrf::{gpio::NoPin, interrupt, uarte};
@@ -40,7 +39,7 @@ mod board;
 mod control;
 mod controller;
 mod gatt;
-mod led;
+//mod led;
 mod runner;
 //mod softdevice;
 mod pattern;
@@ -95,7 +94,7 @@ async fn main(s: embassy::executor::Spawner, p: Peripherals) {
         /*app, */
         BoardPeripherals {
             buttons,
-            neopixel: defmt::unwrap!(NeoPixel::<'_, _, NUM_LEDS>::new(p.PWM0, p.P1_08)),
+            neopixel: defmt::unwrap!(NeoPixelRgb::<'_, _, NUM_LEDS>::new(p.PWM0, p.P1_08)),
         },
     );
 
@@ -145,7 +144,7 @@ pub fn log_stack(file: &'static str) {
 
 async fn enable_ble(
     button: &mut Input<'static, AnyPin>,
-    led: &mut Output<'static, AnyPin>,
+    _led: &mut Output<'static, AnyPin>,
 ) -> bool {
     // startup led
 

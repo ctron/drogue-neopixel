@@ -1,19 +1,22 @@
 use crate::control::ControlButtons;
-use drogue_device::actors::button::{Button, ButtonPressed};
-use drogue_device::drivers::led::neopixel::NeoPixel;
-use drogue_device::{actors::led::Led, ActorContext, Address};
-use embassy::executor::Spawner;
-use embassy::time::{Duration, Ticker};
-use embassy_nrf::gpio::{AnyPin, Input, Output};
-use embassy_nrf::peripherals::PWM0;
+use drogue_device::drivers::led::neopixel::rgb::NeoPixelRgb;
+//use drogue_device::{actors::led::Led,};
+use ector::{ActorContext, Address};
+use embassy::{
+    executor::Spawner,
+    time::{Duration, Ticker},
+};
+use embassy_nrf::{
+    gpio::{AnyPin, Input},
+    peripherals::PWM0,
+};
 
-use crate::{Runner, NUM_LEDS};
+use crate::{runner, Runner, NUM_LEDS};
 
-pub type UserLed = Led<Output<'static, AnyPin>>;
-pub type MyNeoPixel<const N: usize> = NeoPixel<'static, PWM0, N>;
+//pub type UserLed = Led<Output<'static, AnyPin>>;
+pub type MyNeoPixel<const N: usize> = NeoPixelRgb<'static, PWM0, N>;
 pub type MyRunner = Runner<NUM_LEDS>;
-pub type MyButton = Button<Input<'static, AnyPin>, ButtonPressed<MyRunner>>;
-pub type MyControlButtons = ControlButtons<MyRunner>;
+pub type MyControlButtons = ControlButtons<runner::Msg>;
 
 pub struct BurrBoard {
     runner: ActorContext<MyRunner>,
@@ -31,8 +34,8 @@ pub struct BoardActors {
 
     //pub dfu: Address<FirmwareManager<SharedFlashHandle<Flash>>>,
     //pub button: Address<MyButton>,
-    pub runner: Address<MyRunner>,
-    pub control: Address<MyControlButtons>,
+    pub runner: Address<runner::Msg>,
+    pub control: Address<()>,
 }
 
 pub struct BoardPeripherals {
@@ -101,7 +104,7 @@ impl BurrBoard {
 
         let control = self
             .control
-            .mount(s, MyControlButtons::new(runner, p.buttons));
+            .mount(s, MyControlButtons::new(runner.clone(), p.buttons));
 
         BoardActors {
             //flash,

@@ -1,9 +1,11 @@
 use crate::pattern::{Mode, ModeDiscriminants};
 use crate::MyNeoPixel;
-use drogue_device::drivers::led::neopixel::{Brightness, Rgb8, BLACK};
+use drogue_device::drivers::led::neopixel::{
+    filter::Brightness,
+    rgb::{Rgb8, BLACK},
+};
 use embassy::time::{Duration, Instant};
-use num::traits::Float;
-use num::{cast, NumCast};
+use num::{cast, traits::Float, NumCast};
 
 pub struct Controller<const N: usize> {
     pixels: [Rgb8; N],

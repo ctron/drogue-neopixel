@@ -1,4 +1,4 @@
-use crate::control::ControlEvent;
+use crate::control::{Action, ControlEvent, Event};
 use crate::{pattern::ModeDiscriminants, Controller, MyNeoPixel};
 use ector::{Actor, Address, Inbox};
 use embassy::time::{Duration, Ticker};
@@ -70,8 +70,15 @@ impl TryFrom<ControlEvent> for Msg {
     fn try_from(value: ControlEvent) -> Result<Self, Self::Error> {
         defmt::info!("Control button: {0}", defmt::Debug2Format(&value));
         match value {
-            ControlEvent::Next => Ok(Msg::Next),
-            ControlEvent::Prev => Ok(Msg::Prev),
+            ControlEvent {
+                action: Action::A,
+                event: Event::Increase,
+            } => Ok(Msg::Next),
+            ControlEvent {
+                action: Action::A,
+                event: Event::Decrease,
+            } => Ok(Msg::Prev),
+            _ => Err(()),
         }
     }
 }

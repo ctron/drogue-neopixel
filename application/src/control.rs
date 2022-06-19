@@ -1,11 +1,10 @@
 //use crate::softdevice::SoftdeviceApp;
 use ector::{Actor, Address, Inbox};
-use embassy::time::{Duration, Instant};
+use embassy::time::{Duration, Instant, Timer};
+use embassy::util::{select4, Either4};
 use embassy_nrf::gpio::{AnyPin, Input};
-use futures::future::{select, Either};
-use futures::pin_mut;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, defmt::Format)]
 pub enum Action {
     A,
     B,
@@ -13,7 +12,7 @@ pub enum Action {
     D,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, defmt::Format)]
 pub enum Event {
     Start,
     Stop,
@@ -21,16 +20,16 @@ pub enum Event {
     Decrease,
 }
 
-#[derive(Clone, Copy, Debug)]
-pub struct ActionEvent {
+#[derive(Clone, Copy, Debug, defmt::Format)]
+pub struct ControlEvent {
     pub action: Action,
     pub event: Event,
 }
 
-#[derive(Clone, Copy, Debug)]
-pub enum ControlEvent {
-    Next,
-    Prev,
+impl From<(Action, Event)> for ControlEvent {
+    fn from((action, event): (Action, Event)) -> Self {
+        Self { action, event }
+    }
 }
 
 pub struct ControlButtons<H>
@@ -75,29 +74,150 @@ where
         M: Inbox<Self::Message<'m>>,
     {
         loop {
-            let f1 = pushed(&mut self.buttons.0);
-            let f2 = pushed(&mut self.buttons.1);
+            let action = action_started([
+                &mut self.buttons.0,
+                &mut self.buttons.1,
+                &mut self.buttons.2,
+                &mut self.buttons.3,
+            ])
+            .await;
 
-            pin_mut!(f1);
-            pin_mut!(f2);
+            defmt::debug!("Start {}", action);
+            self.send((action, Event::Start));
 
-            match select(f1, f2).await {
-                Either::Left(_) => {
-                    defmt::info!("Button 1");
-                    if let Ok(event) = H::try_from(ControlEvent::Next) {
-                        let _ = self.handler.notify(event);
-                    }
+            match action {
+                Action::A => {
+                    run_action(
+                        &mut self.handler,
+                        action,
+                        &mut self.buttons.0,
+                        &mut self.buttons.3,
+                        [&mut self.buttons.1, &mut self.buttons.2],
+                    )
+                    .await;
                 }
-                Either::Right(_) => {
-                    defmt::info!("Button 2");
-                    if let Ok(event) = H::try_from(ControlEvent::Prev) {
-                        let _ = self.handler.notify(event);
-                    }
+                Action::B => {
+                    run_action(
+                        &mut self.handler,
+                        action,
+                        &mut self.buttons.1,
+                        &mut self.buttons.2,
+                        [&mut self.buttons.3, &mut self.buttons.0],
+                    )
+                    .await;
+                }
+                Action::C => {
+                    run_action(
+                        &mut self.handler,
+                        action,
+                        &mut self.buttons.2,
+                        &mut self.buttons.1,
+                        [&mut self.buttons.3, &mut self.buttons.0],
+                    )
+                    .await;
+                }
+                Action::D => {
+                    run_action(
+                        &mut self.handler,
+                        action,
+                        &mut self.buttons.3,
+                        &mut self.buttons.0,
+                        [&mut self.buttons.1, &mut self.buttons.2],
+                    )
+                    .await;
+                }
+            }
+
+            defmt::debug!("Stop {}", action);
+            self.send((action, Event::Stop));
+        }
+    }
+}
+
+impl<H> ControlButtons<H>
+where
+    H: TryFrom<ControlEvent> + 'static,
+{
+    fn send<E>(&mut self, event: E)
+    where
+        E: Into<ControlEvent>,
+    {
+        if let Ok(event) = H::try_from(event.into()) {
+            self.handler.try_notify(event).ok();
+        }
+    }
+}
+
+async fn run_action<H>(
+    address: &mut Address<H>,
+    action: Action,
+    activator: &mut Input<'static, AnyPin>,
+    increment: &mut Input<'static, AnyPin>,
+    decrement: [&mut Input<'static, AnyPin>; 2],
+) where
+    H: TryFrom<ControlEvent> + 'static,
+{
+    let [d1, d2] = decrement;
+
+    loop {
+        match select4(
+            stopped(activator),
+            pushed(increment),
+            pushed(d1),
+            pushed(d2),
+        )
+        .await
+        {
+            Either4::First(_) => {
+                // Stopped
+                return;
+            }
+            Either4::Second(_) => {
+                // Increment
+                defmt::info!("Increment");
+                if let Ok(event) = H::try_from(ControlEvent::from((action, Event::Increase))) {
+                    address.try_notify(event).ok();
+                }
+            }
+            Either4::Third(_) | Either4::Fourth(_) => {
+                // Decrement
+                defmt::info!("Decrement");
+                if let Ok(event) = H::try_from(ControlEvent::from((action, Event::Decrease))) {
+                    address.try_notify(event).ok();
                 }
             }
         }
     }
 }
+
+async fn action_started(input: [&mut Input<'static, AnyPin>; 4]) -> Action {
+    let [a, b, c, d] = input;
+    match select4(started(a), started(b), started(c), started(d)).await {
+        Either4::First(_) => Action::A,
+        Either4::Second(_) => Action::B,
+        Either4::Third(_) => Action::C,
+        Either4::Fourth(_) => Action::D,
+    }
+}
+
+async fn started(input: &mut Input<'static, AnyPin>) {
+    loop {
+        input.wait_for_high().await;
+        input.wait_for_low().await;
+        Timer::after(DEBOUNCE_DELAY).await;
+        if input.is_low() {
+            // still low, ok let's go...
+            return;
+        }
+    }
+}
+
+async fn stopped(input: &mut Input<'static, AnyPin>) {
+    // FIXME: need to debounce too
+    input.wait_for_high().await;
+}
+
+const DEBOUNCE_DELAY: Duration = Duration::from_millis(50);
 
 async fn pushed(input: &mut Input<'static, AnyPin>) {
     loop {
@@ -105,8 +225,13 @@ async fn pushed(input: &mut Input<'static, AnyPin>) {
         input.wait_for_low().await;
         let now = Instant::now();
         input.wait_for_high().await;
-        if Instant::now() - now > Duration::from_millis(100) {
+        if Instant::now() - now > DEBOUNCE_DELAY {
             return;
         }
     }
 }
+
+/*
+ * Wait for any button:
+ *   * As long as the button is held, watch other 3
+ */

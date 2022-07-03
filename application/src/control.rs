@@ -1,6 +1,6 @@
 //use crate::softdevice::SoftdeviceApp;
 use ector::{Actor, Address, Inbox};
-use embassy::time::{Duration, Instant, Timer};
+use embassy::time::{Duration, Timer};
 use embassy::util::{select4, Either4};
 use embassy_nrf::gpio::{AnyPin, Input};
 
@@ -174,14 +174,12 @@ async fn run_action<H>(
             }
             Either4::Second(_) => {
                 // Increment
-                defmt::info!("Increment");
                 if let Ok(event) = H::try_from(ControlEvent::from((action, Event::Increase))) {
                     address.try_notify(event).ok();
                 }
             }
             Either4::Third(_) | Either4::Fourth(_) => {
                 // Decrement
-                defmt::info!("Decrement");
                 if let Ok(event) = H::try_from(ControlEvent::from((action, Event::Decrease))) {
                     address.try_notify(event).ok();
                 }
@@ -218,14 +216,30 @@ async fn stopped(input: &mut Input<'static, AnyPin>) {
 }
 
 const DEBOUNCE_DELAY: Duration = Duration::from_millis(50);
+const REPEAT_DELAY: Duration = Duration::from_millis(250);
 
 async fn pushed(input: &mut Input<'static, AnyPin>) {
+    if input.is_low() {
+        // already pressed
+        loop {
+            Timer::after(REPEAT_DELAY).await;
+            if input.is_low() {
+                // still pressed, fire
+                return;
+            } else {
+                // start waiting, but don't fire
+                break;
+            }
+        }
+    }
+
+    // button not pressed or no longer pressed, we wait
     loop {
-        input.wait_for_high().await;
         input.wait_for_low().await;
-        let now = Instant::now();
-        input.wait_for_high().await;
-        if Instant::now() - now > DEBOUNCE_DELAY {
+        //let now = Instant::now();
+        Timer::after(DEBOUNCE_DELAY).await;
+        if input.is_low() {
+            // still pressed
             return;
         }
     }

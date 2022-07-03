@@ -2,10 +2,7 @@ use crate::control::ControlButtons;
 use drogue_device::drivers::led::neopixel::rgb::NeoPixelRgb;
 //use drogue_device::{actors::led::Led,};
 use ector::{ActorContext, Address};
-use embassy::{
-    executor::Spawner,
-    time::{Duration, Ticker},
-};
+use embassy::executor::Spawner;
 use embassy_nrf::{
     gpio::{AnyPin, Input},
     peripherals::PWM0,
@@ -89,7 +86,6 @@ impl BurrBoard {
             s,
             Runner {
                 neopixel: p.neopixel,
-                ticker: Ticker::every(Duration::from_millis(250)),
             },
         );
 

@@ -11,6 +11,7 @@ pub struct Controller<const N: usize> {
     pixels: [Rgb8; N],
     mode: Mode<N>,
     sleep: Option<Sleep<u8>>,
+    brightness: u8,
 }
 
 impl<const N: usize> Controller<N> {
@@ -19,6 +20,7 @@ impl<const N: usize> Controller<N> {
             mode: Mode::Off,
             pixels: [BLACK; N],
             sleep: None,
+            brightness: 16,
         };
         result.next();
         result
@@ -40,7 +42,7 @@ impl<const N: usize> Controller<N> {
         let mut f = if let Some(sleep) = &self.sleep {
             Brightness(sleep.remaining_now())
         } else {
-            Brightness(16)
+            Brightness(self.brightness)
         };
 
         self.mode.tick(&mut self.pixels, neopixel, &mut f).await;
@@ -52,6 +54,20 @@ impl<const N: usize> Controller<N> {
 
     pub fn stop_sleep(&mut self) {
         self.sleep = None;
+    }
+
+    pub fn lighter(&mut self) {
+        if self.brightness < u8::MAX {
+            self.brightness += 1;
+        }
+        defmt::info!("Brightness: {}", self.brightness);
+    }
+
+    pub fn darker(&mut self) {
+        if self.brightness > u8::MIN {
+            self.brightness -= 1;
+        }
+        defmt::info!("Brightness: {}", self.brightness);
     }
 }
 

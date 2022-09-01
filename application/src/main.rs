@@ -63,27 +63,14 @@ fn config() -> Config {
 #[embassy::main(config = "config()")]
 //#[embassy::main]
 async fn main(s: embassy::executor::Spawner, p: Peripherals) {
-    #[cfg(feature = "log")]
-    {
-        logger::init(uarte::Uarte::new(
-            p.UARTE0,
-            interrupt::take!(UARTE0_UART0),
-            p.P0_24,
-            p.P0_25,
-            NoPin,
-            NoPin,
-            Default::default(),
-        ));
-    }
-
     // Setup burrboard peripherals
     static BOARD: BurrBoard = BurrBoard::new();
 
     let mut buttons = (
-        Input::new(p.P0_26.degrade(), Pull::Up),
-        Input::new(p.P0_06.degrade(), Pull::Up),
-        Input::new(p.P0_08.degrade(), Pull::Up),
         Input::new(p.P0_27.degrade(), Pull::Up),
+        Input::new(p.P0_06.degrade(), Pull::Up),
+        Input::new(p.P0_26.degrade(), Pull::Up),
+        Input::new(p.P0_08.degrade(), Pull::Up),
     );
 
     let mut user_led = Output::new(p.P1_10.degrade(), Level::Low, OutputDrive::Standard);

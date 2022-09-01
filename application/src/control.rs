@@ -18,6 +18,7 @@ pub enum Event {
     Stop,
     Increase,
     Decrease,
+    Reset,
 }
 
 #[derive(Clone, Copy, Debug, defmt::Format)]

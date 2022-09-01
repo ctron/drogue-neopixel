@@ -1,6 +1,5 @@
 use crate::control::ControlButtons;
 use drogue_device::drivers::led::neopixel::rgb::NeoPixelRgb;
-//use drogue_device::{actors::led::Led,};
 use ector::{ActorContext, Address};
 use embassy::executor::Spawner;
 use embassy_nrf::{
@@ -18,19 +17,9 @@ pub type MyControlButtons = ControlButtons<runner::Msg>;
 pub struct BurrBoard {
     runner: ActorContext<MyRunner>,
     control: ActorContext<MyControlButtons>,
-    //flash: ActorContext<SharedFlash<Flash>>,
-    //dfu: ActorContext<FirmwareManager<SharedFlashHandle<Flash>>>,
-
-    //control: ActorContext<ControlButton>,
 }
 
 pub struct BoardActors {
-    //pub user_led: Address<UserLed>,
-
-    //pub flash: Address<SharedFlash<Flash>>,
-
-    //pub dfu: Address<FirmwareManager<SharedFlashHandle<Flash>>>,
-    //pub button: Address<MyButton>,
     pub runner: Address<runner::Msg>,
     pub control: Address<()>,
 }
@@ -51,37 +40,10 @@ impl BurrBoard {
         Self {
             runner: ActorContext::new(),
             control: ActorContext::new(),
-            // flash: ActorContext::new(),
-            // dfu: ActorContext::new(),
         }
     }
 
-    pub fn mount(
-        &'static self,
-        s: Spawner,
-        //app: &'static SoftdeviceApp,
-        p: BoardPeripherals,
-    ) -> BoardActors {
-        // Actor for shared access to flash
-        // let flash = self.flash.mount(s, SharedFlash::new(app.flash()));
-
-        // Actor for DFU\
-        /*
-        let dfu = self.dfu.mount(
-            s,
-            FirmwareManager::new(flash.into(), embassy_boot_nrf::updater::new()),
-        );
-
-         */
-
-        /*
-        self.control.mount(
-            s,
-            ControlButton::new(app, Input::new(p.P1_02.degrade(), Pull::Up)),
-        );
-         */
-
-        //p1.p1_08
+    pub fn mount(&'static self, s: Spawner, p: BoardPeripherals) -> BoardActors {
         let runner = self.runner.mount(
             s,
             Runner {
@@ -89,25 +51,10 @@ impl BurrBoard {
             },
         );
 
-        /*
-        let button = self.button.mount(
-            s,
-            Button::new(
-                Input::new(p.P1_02.degrade(), Pull::Up),
-                ButtonPressed(runner.clone(), runner::Msg::Next),
-            ),
-        )*/
-
         let control = self
             .control
             .mount(s, MyControlButtons::new(runner.clone(), p.buttons));
 
-        BoardActors {
-            //flash,
-            //dfu,
-            runner,
-            //button,
-            control,
-        }
+        BoardActors { runner, control }
     }
 }

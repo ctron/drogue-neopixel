@@ -14,13 +14,15 @@ pub struct Controller<const N: usize> {
     brightness: u8,
 }
 
+const INITIAL_BRIGHTNESS: u8 = 16;
+
 impl<const N: usize> Controller<N> {
     pub fn new() -> Self {
         let mut result = Self {
             mode: Mode::Off,
             pixels: [BLACK; N],
             sleep: None,
-            brightness: 16,
+            brightness: INITIAL_BRIGHTNESS,
         };
         result.next();
         result
@@ -67,6 +69,11 @@ impl<const N: usize> Controller<N> {
         if self.brightness > u8::MIN {
             self.brightness -= 1;
         }
+        defmt::info!("Brightness: {}", self.brightness);
+    }
+
+    pub fn reset_brightness(&mut self) {
+        self.brightness = INITIAL_BRIGHTNESS;
         defmt::info!("Brightness: {}", self.brightness);
     }
 }

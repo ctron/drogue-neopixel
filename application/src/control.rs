@@ -1,8 +1,11 @@
-//use crate::softdevice::SoftdeviceApp;
 use ector::{Actor, Address, Inbox};
 use embassy::time::{Duration, Timer};
-use embassy::util::{select4, Either4};
+use embassy::util::{select, select4, Either, Either4};
 use embassy_nrf::gpio::{AnyPin, Input};
+
+const DEBOUNCE_DELAY: Duration = Duration::from_millis(50);
+const REPEAT_DELAY: Duration = Duration::from_millis(250);
+const RESET_DELAY: Duration = Duration::from_millis(250);
 
 #[derive(Clone, Copy, Debug, defmt::Format)]
 pub enum Action {
@@ -61,6 +64,17 @@ where
     ) -> Self {
         Self { handler, buttons }
     }
+
+    /// Get the button for the action
+    pub fn button_mut(&mut self, action: Action) -> &mut Input<'static, AnyPin> {
+        // This is just a convenience, and should not be used for mapping buttons.
+        match action {
+            Action::A => &mut self.buttons.0,
+            Action::B => &mut self.buttons.1,
+            Action::C => &mut self.buttons.2,
+            Action::D => &mut self.buttons.3,
+        }
+    }
 }
 
 #[ector::actor]
@@ -82,6 +96,11 @@ where
                 &mut self.buttons.3,
             ])
             .await;
+
+            if wait_reset(self.button_mut(action)).await {
+                self.send((action, Event::Reset));
+                continue;
+            }
 
             defmt::debug!("Start {}", action);
             self.send((action, Event::Start));
@@ -147,6 +166,26 @@ where
             self.handler.try_notify(event).ok();
         }
     }
+}
+
+async fn wait_reset(button: &mut Input<'static, AnyPin>) -> bool {
+    let r = select(
+        async {
+            // wait for reset ...
+            button.wait_for_low().await;
+            Timer::after(DEBOUNCE_DELAY).await;
+            button.wait_for_high().await;
+            Timer::after(DEBOUNCE_DELAY).await;
+            button.wait_for_low().await;
+        },
+        async {
+            // or timeout ...
+            Timer::after(RESET_DELAY).await;
+        },
+    )
+    .await;
+
+    matches!(r, Either::First(()))
 }
 
 async fn run_action<H>(
@@ -215,9 +254,6 @@ async fn stopped(input: &mut Input<'static, AnyPin>) {
     // FIXME: need to debounce too
     input.wait_for_high().await;
 }
-
-const DEBOUNCE_DELAY: Duration = Duration::from_millis(50);
-const REPEAT_DELAY: Duration = Duration::from_millis(250);
 
 async fn pushed(input: &mut Input<'static, AnyPin>) {
     if input.is_low() {

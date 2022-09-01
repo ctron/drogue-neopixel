@@ -78,7 +78,6 @@ async fn main(s: embassy::executor::Spawner, p: Peripherals) {
 
     let ap = BOARD.mount(
         s,
-        /*app, */
         BoardPeripherals {
             buttons,
             neopixel: defmt::unwrap!(NeoPixelRgb::<'_, _, NUM_LEDS>::new(p.PWM0, p.P1_08)),

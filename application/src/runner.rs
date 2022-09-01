@@ -20,12 +20,16 @@ pub enum Msg {
     Prev,
     Faster,
     Slower,
+    ResetSpeed,
     SetMode(ModeDiscriminants),
     StartSleep(Duration),
     StopSleep,
     Lighter,
     Darker,
+    ResetBrightness,
 }
+
+const INITIAL_SPEED_MS: u64 = 250u64;
 
 #[ector::actor]
 impl<const N: usize> Actor for Runner<N> {
@@ -35,7 +39,7 @@ impl<const N: usize> Actor for Runner<N> {
     where
         M: Inbox<Self::Message<'m>>,
     {
-        let mut speed_ms = 250u64;
+        let mut speed_ms = INITIAL_SPEED_MS;
         let mut ticker = Ticker::every(Duration::from_millis(speed_ms));
         let mut controller = Controller::<N>::new();
 
@@ -75,11 +79,19 @@ impl<const N: usize> Actor for Runner<N> {
                             defmt::info!("Speed: {} ms", speed_ms);
                             ticker = Ticker::every(Duration::from_millis(speed_ms));
                         }
+                        Msg::ResetSpeed => {
+                            speed_ms = INITIAL_SPEED_MS;
+                            defmt::info!("Speed: {} ms", speed_ms);
+                            ticker = Ticker::every(Duration::from_millis(speed_ms));
+                        }
                         Msg::Lighter => {
                             controller.lighter();
                         }
                         Msg::Darker => {
                             controller.darker();
+                        }
+                        Msg::ResetBrightness => {
+                            controller.reset_brightness();
                         }
                     }
                 }
@@ -120,7 +132,7 @@ impl TryFrom<ControlEvent> for Msg {
     fn try_from(value: ControlEvent) -> Result<Self, Self::Error> {
         defmt::info!("Control button: {0}", defmt::Debug2Format(&value));
         match value {
-            // A
+            // A - pattern
             ControlEvent {
                 action: Action::A,
                 event: Event::Increase,
@@ -129,7 +141,12 @@ impl TryFrom<ControlEvent> for Msg {
                 action: Action::A,
                 event: Event::Decrease,
             } => Ok(Msg::Prev),
-            // B
+            ControlEvent {
+                action: Action::A,
+                event: Event::Reset,
+            } => Ok(Msg::SetMode(ModeDiscriminants::Off.next())),
+
+            // B - speed
             ControlEvent {
                 action: Action::B,
                 event: Event::Increase,
@@ -138,6 +155,11 @@ impl TryFrom<ControlEvent> for Msg {
                 action: Action::B,
                 event: Event::Decrease,
             } => Ok(Msg::Slower),
+            ControlEvent {
+                action: Action::B,
+                event: Event::Reset,
+            } => Ok(Msg::ResetSpeed),
+
             // C
             ControlEvent {
                 action: Action::C,
@@ -147,6 +169,11 @@ impl TryFrom<ControlEvent> for Msg {
                 action: Action::C,
                 event: Event::Decrease,
             } => Ok(Msg::Darker),
+            ControlEvent {
+                action: Action::C,
+                event: Event::Reset,
+            } => Ok(Msg::ResetBrightness),
+
             // ignore
             _ => Err(()),
         }

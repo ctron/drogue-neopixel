@@ -1371,6 +1371,7 @@ dependencies = [
  "futures",
  "heapless",
  "itertools",
+ "libm",
  "log",
  "nrf-softdevice",
  "nrf-softdevice-defmt-rtt",

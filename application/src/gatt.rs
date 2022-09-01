@@ -102,8 +102,8 @@ impl BurrBoardMonitor {
             BurrBoardServiceEvent::DirectionWrite(val) => {
                 info!("Direction: {}", val);
                 let mode = match val {
-                    0 => ModeDiscriminants::UA,
-                    1 => ModeDiscriminants::DE,
+                    //0 => ModeDiscriminants::UA,
+                    //1 => ModeDiscriminants::DE,
                     2 => ModeDiscriminants::Rainbow,
                     3 => ModeDiscriminants::RainbowPart,
                     _ => ModeDiscriminants::Off,

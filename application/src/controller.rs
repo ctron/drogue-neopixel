@@ -58,6 +58,10 @@ impl<const N: usize> Controller<N> {
         self.sleep = None;
     }
 
+    pub fn remaining_sleep_ms(&self) -> Option<f64> {
+        self.sleep.as_ref().map(|s| s.remaining_ms())
+    }
+
     pub fn lighter(&mut self) {
         if self.brightness < u8::MAX {
             self.brightness += 1;
@@ -123,6 +127,20 @@ where
     pub fn remaining_now(&self) -> T {
         self.remaining(Instant::now())
     }
+
+    /// Get the remaining time in ms
+    pub fn remaining_ms(&self) -> f64 {
+        let now = Instant::now();
+
+        let end = self.start + self.duration;
+        if now >= end {
+            return 0.0;
+        }
+
+        let rem = (end - now).as_millis();
+
+        rem as f64
+    }
 }
 
 #[cfg(test)]
@@ -134,6 +152,7 @@ mod test {
         let sleep = Sleep {
             start: Instant::from_secs(0),
             duration: Duration::from_secs(300),
+            min: 0,
             max: 16,
         };
 

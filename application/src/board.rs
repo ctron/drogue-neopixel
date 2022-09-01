@@ -15,7 +15,7 @@ pub type MyRunner = Runner<NUM_LEDS>;
 pub type MyControlButtons = ControlButtons<runner::Msg>;
 
 pub struct BurrBoard {
-    runner: ActorContext<MyRunner>,
+    runner: ActorContext<MyRunner, 5>,
     control: ActorContext<MyControlButtons>,
 }
 
@@ -44,12 +44,7 @@ impl BurrBoard {
     }
 
     pub fn mount(&'static self, s: Spawner, p: BoardPeripherals) -> BoardActors {
-        let runner = self.runner.mount(
-            s,
-            Runner {
-                neopixel: p.neopixel,
-            },
-        );
+        let runner = self.runner.mount(s, Runner::new(p.neopixel));
 
         let control = self
             .control

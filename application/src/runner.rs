@@ -3,6 +3,7 @@ use crate::{
     pattern::ModeDiscriminants,
     Controller, MyNeoPixel,
 };
+use drogue_device::drivers::led::neopixel::rgb;
 use ector::{Actor, Address, Inbox};
 use embassy::time::{Duration, Ticker};
 use futures::{
@@ -12,6 +13,9 @@ use futures::{
 
 pub struct Runner<const N: usize> {
     pub neopixel: MyNeoPixel<N>,
+    speed_ms: u64,
+    ticker: Ticker,
+    controller: Controller<N>,
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -24,9 +28,15 @@ pub enum Msg {
     SetMode(ModeDiscriminants),
     StartSleep(Duration),
     StopSleep,
+    SleepConfig(Event),
     Lighter,
     Darker,
     ResetBrightness,
+}
+
+pub enum State {
+    Running,
+    ConfigureSleep,
 }
 
 const INITIAL_SPEED_MS: u64 = 250u64;
@@ -39,13 +49,78 @@ impl<const N: usize> Actor for Runner<N> {
     where
         M: Inbox<Self::Message<'m>>,
     {
-        let mut speed_ms = INITIAL_SPEED_MS;
-        let mut ticker = Ticker::every(Duration::from_millis(speed_ms));
-        let mut controller = Controller::<N>::new();
+        let mut state = State::Running;
 
         loop {
+            match state {
+                State::Running => {
+                    state = self.running(&mut inbox).await;
+                }
+                State::ConfigureSleep => {
+                    state = self.configure_sleep(&mut inbox).await;
+                }
+            }
+        }
+    }
+}
+
+impl<const N: usize> Runner<N> {
+    pub fn new(neopixel: MyNeoPixel<N>) -> Self {
+        let ticker = Ticker::every(Duration::from_millis(INITIAL_SPEED_MS));
+        let controller = Controller::<N>::new();
+        Self {
+            neopixel,
+            speed_ms: INITIAL_SPEED_MS,
+            ticker,
+            controller,
+        }
+    }
+
+    async fn configure_sleep<M: Inbox<Msg>>(&mut self, inbox: &mut M) -> State {
+        defmt::info!("Begin sleep config");
+
+        let current_ms = self
+            .controller
+            .remaining_sleep_ms()
+            .unwrap_or(SleepConfig::DEFAULT_MS);
+
+        let mut cfg = SleepConfig { current_ms };
+
+        loop {
+            cfg.render(&mut self.neopixel).await;
+
+            let msg = inbox.next().await;
+            defmt::info!("Event: {0}", defmt::Debug2Format(&msg));
+            match msg {
+                Msg::SleepConfig(Event::Stop) => {
+                    defmt::info!("Stop sleep config");
+                    if cfg.current_ms > 0.0 {
+                        let duration = cfg.current_ms as u64;
+                        defmt::info!("Start sleep: {}s", duration / 1000);
+                        // start
+                        self.controller.start_sleep(Duration::from_millis(duration));
+                    } else {
+                        // stop
+                        defmt::info!("Stop sleep mode");
+                        self.controller.stop_sleep();
+                    }
+                    return State::Running;
+                }
+                Msg::SleepConfig(Event::Increase) => {
+                    cfg.increase();
+                }
+                Msg::SleepConfig(Event::Decrease) => {
+                    cfg.decrease();
+                }
+                _ => {}
+            }
+        }
+    }
+
+    async fn running<M: Inbox<Msg>>(&mut self, inbox: &mut M) -> State {
+        loop {
             let next = inbox.next();
-            let delay = ticker.next();
+            let delay = self.ticker.next();
 
             pin_mut!(next);
             pin_mut!(delay);
@@ -55,48 +130,58 @@ impl<const N: usize> Actor for Runner<N> {
                     defmt::info!("Message: {}", defmt::Debug2Format(&m));
                     match m {
                         Msg::Next => {
-                            controller.next();
+                            self.controller.next();
                         }
                         Msg::Prev => {
-                            controller.prev();
+                            self.controller.prev();
                         }
                         Msg::SetMode(mode) => {
-                            controller.mode(mode);
+                            self.controller.mode(mode);
                         }
                         Msg::StartSleep(duration) => {
-                            controller.start_sleep(duration);
+                            self.controller.start_sleep(duration);
                         }
                         Msg::StopSleep => {
-                            controller.stop_sleep();
+                            self.controller.stop_sleep();
+                        }
+                        Msg::SleepConfig(Event::Reset) => {
+                            self.controller.stop_sleep();
+                        }
+                        Msg::SleepConfig(Event::Start) => {
+                            defmt::info!("Start sleep config");
+                            return State::ConfigureSleep;
+                        }
+                        Msg::SleepConfig(_) => {
+                            // ignore
                         }
                         Msg::Faster => {
-                            speed_ms = faster(speed_ms);
-                            defmt::info!("Speed: {} ms", speed_ms);
-                            ticker = Ticker::every(Duration::from_millis(speed_ms));
+                            self.speed_ms = faster(self.speed_ms);
+                            defmt::info!("Speed: {} ms", self.speed_ms);
+                            self.ticker = Ticker::every(Duration::from_millis(self.speed_ms));
                         }
                         Msg::Slower => {
-                            speed_ms = slower(speed_ms);
-                            defmt::info!("Speed: {} ms", speed_ms);
-                            ticker = Ticker::every(Duration::from_millis(speed_ms));
+                            self.speed_ms = slower(self.speed_ms);
+                            defmt::info!("Speed: {} ms", self.speed_ms);
+                            self.ticker = Ticker::every(Duration::from_millis(self.speed_ms));
                         }
                         Msg::ResetSpeed => {
-                            speed_ms = INITIAL_SPEED_MS;
-                            defmt::info!("Speed: {} ms", speed_ms);
-                            ticker = Ticker::every(Duration::from_millis(speed_ms));
+                            self.speed_ms = INITIAL_SPEED_MS;
+                            defmt::info!("Speed: {} ms", self.speed_ms);
+                            self.ticker = Ticker::every(Duration::from_millis(self.speed_ms));
                         }
                         Msg::Lighter => {
-                            controller.lighter();
+                            self.controller.lighter();
                         }
                         Msg::Darker => {
-                            controller.darker();
+                            self.controller.darker();
                         }
                         Msg::ResetBrightness => {
-                            controller.reset_brightness();
+                            self.controller.reset_brightness();
                         }
                     }
                 }
                 Either::Right((_, _d)) => {
-                    controller.tick(&mut self.neopixel).await;
+                    self.controller.tick(&mut self.neopixel).await;
                 }
             }
         }
@@ -160,7 +245,7 @@ impl TryFrom<ControlEvent> for Msg {
                 event: Event::Reset,
             } => Ok(Msg::ResetSpeed),
 
-            // C
+            // C - brightness
             ControlEvent {
                 action: Action::C,
                 event: Event::Increase,
@@ -174,8 +259,50 @@ impl TryFrom<ControlEvent> for Msg {
                 event: Event::Reset,
             } => Ok(Msg::ResetBrightness),
 
+            // D - sleep config
+            ControlEvent {
+                action: Action::D,
+                event,
+            } => Ok(Msg::SleepConfig(event)),
+
             // ignore
             _ => Err(()),
+        }
+    }
+}
+
+struct SleepConfig {
+    pub current_ms: f64,
+}
+
+impl SleepConfig {
+    const MAX_MS: f64 = 60.0 * 60.0 * 1000.0; /* 1h */
+    const DEFAULT_MS: f64 = 15.0 * 60.0 * 1000.0; /* 15m */
+    const STEP_MS: f64 = 5.0 * 60.0 * 1000.0; /* 5m */
+
+    pub async fn render<const N: usize>(&self, pixels: &mut MyNeoPixel<N>) {
+        let num = ((self.current_ms / Self::MAX_MS) * N as f64) as usize;
+
+        let i = itertools::chain(
+            itertools::repeat_n(&rgb::RED, num),
+            itertools::repeat_n(&rgb::BLACK, N - num),
+        );
+
+        let _ = pixels.set_from_iter(i).await;
+    }
+
+    pub fn increase(&mut self) {
+        self.current_ms += Self::STEP_MS;
+        if self.current_ms > Self::MAX_MS {
+            self.current_ms = Self::MAX_MS;
+        }
+    }
+
+    pub fn decrease(&mut self) {
+        if self.current_ms >= Self::STEP_MS {
+            self.current_ms -= Self::STEP_MS;
+        } else {
+            self.current_ms = 0.0;
         }
     }
 }

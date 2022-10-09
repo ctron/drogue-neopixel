@@ -1,7 +1,7 @@
 use crate::pattern::Context;
 use crate::{MyNeoPixel, DEFAULT_SPEED};
 use drogue_device::drivers::led::neopixel::{filter::Filter, rgb::Rgb8};
-use embassy::time::Instant;
+use embassy_time::Instant;
 use num::pow;
 
 pub struct Fire<const N: usize>;

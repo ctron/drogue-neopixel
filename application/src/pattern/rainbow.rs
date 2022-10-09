@@ -2,7 +2,7 @@ use crate::pattern::Context;
 use crate::MyNeoPixel;
 use core::num::NonZeroUsize;
 use drogue_device::drivers::led::neopixel::{filter::Filter, rgb::Rgb8};
-use embassy::time::{Duration, Instant};
+use embassy_time::{Duration, Instant};
 use palette::rgb::Rgb;
 use palette::{Hsv, IntoColor};
 

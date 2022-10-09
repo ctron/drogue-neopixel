@@ -5,7 +5,7 @@ use crate::{
 };
 use drogue_device::drivers::led::neopixel::rgb;
 use ector::{Actor, Address, Inbox};
-use embassy::time::{Duration, Ticker};
+use embassy_time::{Duration, Ticker};
 use futures::{
     future::{select, Either},
     pin_mut, StreamExt,

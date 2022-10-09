@@ -1,26 +1,28 @@
 [workspace]
 members = [
     "application",
-    "bootloader",
+    #"bootloader",
 ]
 resolver = "2"
 
 [patch.crates-io]
-embassy = { git = "https://github.com/embassy-rs/embassy.git", rev = "6baddaf53982b75149cb7e91280c571f7fe2e7bc" }
-embassy-nrf = { git = "https://github.com/embassy-rs/embassy.git", rev = "6baddaf53982b75149cb7e91280c571f7fe2e7bc"}
-embassy-boot = { git = "https://github.com/embassy-rs/embassy.git", rev = "6baddaf53982b75149cb7e91280c571f7fe2e7bc"}
-embassy-boot-nrf  = { git = "https://github.com/embassy-rs/embassy.git", rev = "6baddaf53982b75149cb7e91280c571f7fe2e7bc"}
-embassy-embedded-hal = { git = "https://github.com/embassy-rs/embassy.git", rev = "6baddaf53982b75149cb7e91280c571f7fe2e7bc" }
-embassy-hal-common = { git = "https://github.com/embassy-rs/embassy.git", rev = "6baddaf53982b75149cb7e91280c571f7fe2e7bc" }
+embassy-executor = { git = "https://github.com/embassy-rs/embassy.git", rev = "11da25800bce338e39082e9d35b1af8db3e5875d" }
+embassy-nrf = { git = "https://github.com/embassy-rs/embassy.git", rev = "11da25800bce338e39082e9d35b1af8db3e5875d"}
+embassy-boot = { git = "https://github.com/embassy-rs/embassy.git", rev = "11da25800bce338e39082e9d35b1af8db3e5875d"}
+embassy-boot-nrf  = { git = "https://github.com/embassy-rs/embassy.git", rev = "11da25800bce338e39082e9d35b1af8db3e5875d"}
+embassy-embedded-hal = { git = "https://github.com/embassy-rs/embassy.git", rev = "11da25800bce338e39082e9d35b1af8db3e5875d" }
+embassy-futures = { git = "https://github.com/embassy-rs/embassy.git", rev = "11da25800bce338e39082e9d35b1af8db3e5875d" }
+embassy-hal-common = { git = "https://github.com/embassy-rs/embassy.git", rev = "11da25800bce338e39082e9d35b1af8db3e5875d" }
+embassy-sync = { git = "https://github.com/embassy-rs/embassy.git", rev = "11da25800bce338e39082e9d35b1af8db3e5875d" }
+embassy-time = { git = "https://github.com/embassy-rs/embassy.git", rev = "11da25800bce338e39082e9d35b1af8db3e5875d" }
 
-drogue-device = { git = "https://github.com/drogue-iot/drogue-device.git", rev = "e7b47d6c9cf1c02ed690f9575982f273284364b5"}
-drogue-device-macros = { git = "https://github.com/drogue-iot/drogue-device.git", rev = "e7b47d6c9cf1c02ed690f9575982f273284364b5"}
-ector = { git = "https://github.com/drogue-iot/ector.git", rev = "63c08489da17ff92c493f21411411ce5ddd6154a" }
+drogue-device = { git = "https://github.com/drogue-iot/drogue-device.git", rev = "d8a6791436030608d95f458e68ae63fd13cfccc0"}
+ector = { git = "https://github.com/drogue-iot/ector.git", rev = "794fba65755dc34490be7e4d860ea3703e2b5466" }
 
-nrf-softdevice = { git = "https://github.com/embassy-rs/nrf-softdevice.git", rev = "a5026485151138112b522a27c4a340614d7a7512" }
-nrf-softdevice-s140 = { git = "https://github.com/embassy-rs/nrf-softdevice.git", rev = "a5026485151138112b522a27c4a340614d7a7512" }
-nrf-softdevice-macro = { git = "https://github.com/embassy-rs/nrf-softdevice.git", rev = "a5026485151138112b522a27c4a340614d7a7512" }
-nrf-softdevice-defmt-rtt = { git = "https://github.com/embassy-rs/nrf-softdevice.git", rev = "a5026485151138112b522a27c4a340614d7a7512" }
+#nrf-softdevice = { git = "https://github.com/embassy-rs/nrf-softdevice.git", rev = "11c2728235bef45ba34b735e3975344e2641f0b9" }
+#nrf-softdevice-s140 = { git = "https://github.com/embassy-rs/nrf-softdevice.git", rev = "11c2728235bef45ba34b735e3975344e2641f0b9" }
+#nrf-softdevice-macro = { git = "https://github.com/embassy-rs/nrf-softdevice.git", rev = "11c2728235bef45ba34b735e3975344e2641f0b9" }
+#nrf-softdevice-defmt-rtt = { git = "https://github.com/embassy-rs/nrf-softdevice.git", rev = "11c2728235bef45ba34b735e3975344e2641f0b9" }
 
 [profile.dev]
 debug = 2

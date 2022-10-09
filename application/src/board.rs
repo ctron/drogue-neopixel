@@ -1,7 +1,7 @@
 use crate::control::ControlButtons;
 use drogue_device::drivers::led::neopixel::rgb::NeoPixelRgb;
 use ector::{ActorContext, Address};
-use embassy::executor::Spawner;
+use embassy_executor::Spawner;
 use embassy_nrf::{
     gpio::{AnyPin, Input},
     peripherals::PWM0,

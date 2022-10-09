@@ -1,4 +1,4 @@
-use embassy::executor::Spawner;
+use embassy_executor::Spawner;
 use nrf_softdevice::{raw, Softdevice};
 
 use crate::board::*;

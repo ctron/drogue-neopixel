@@ -1,7 +1,7 @@
 use ector::{Actor, Address, Inbox};
-use embassy::time::{Duration, Timer};
-use embassy::util::{select, select4, Either, Either4};
+use embassy_futures::select::{select, select4, Either, Either4};
 use embassy_nrf::gpio::{AnyPin, Input};
+use embassy_time::{Duration, Timer};
 
 const DEBOUNCE_DELAY: Duration = Duration::from_millis(50);
 const REPEAT_DELAY: Duration = Duration::from_millis(250);

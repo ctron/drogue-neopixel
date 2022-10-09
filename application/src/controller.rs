@@ -4,7 +4,7 @@ use drogue_device::drivers::led::neopixel::{
     filter::Brightness,
     rgb::{Rgb8, BLACK},
 };
-use embassy::time::{Duration, Instant};
+use embassy_time::{Duration, Instant};
 use num::{cast, traits::Float, NumCast};
 
 pub struct Controller<const N: usize> {
@@ -35,7 +35,7 @@ impl<const N: usize> Controller<N> {
 
     pub fn mode(&mut self, mode: ModeDiscriminants) {
         self.mode = mode.new(&mut self.pixels);
-        info!("Mode: {}", Into::<&'static str>::into(&self.mode))
+        defmt::info!("Mode: {}", Into::<&'static str>::into(&self.mode))
     }
 
     pub fn next(&mut self) {

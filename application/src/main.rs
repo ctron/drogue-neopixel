@@ -5,11 +5,9 @@
 #![feature(type_alias_impl_trait)]
 
 use ector::ActorContext;
-use embassy::time::{Duration, Timer};
-use embassy::util::Forever;
 use embassy_nrf::config::Config;
 use embassy_nrf::interrupt::Priority;
-use embassy_nrf::Peripherals;
+use embassy_time::{Duration, Timer};
 
 const NUM_LEDS: usize = 60;
 
@@ -18,32 +16,37 @@ use embassy_nrf::gpio::{AnyPin, Input, Level, Output, OutputDrive, Pin, Pull};
 use futures::future::{select, Either};
 use futures::pin_mut;
 
-mod fmt;
+//mod fmt;
 
 #[cfg(feature = "panic-probe")]
 use panic_probe as _;
 
-#[cfg(feature = "nrf-softdevice-defmt-rtt")]
-use nrf_softdevice_defmt_rtt as _;
+#[cfg(feature = "defmt-rtt")]
+use defmt_rtt as _;
+
+#[cfg(feature = "panic-reset")]
+use panic_reset as _;
 
 #[cfg(feature = "log")]
 mod logger;
 
-#[cfg(not(feature = "defmt"))]
-use panic_reset as _;
-
+#[cfg(feature = "ble")]
 mod app;
+#[cfg(feature = "ble")]
+mod gatt;
+
 mod board;
 mod control;
 mod controller;
-mod gatt;
 //mod led;
 mod runner;
 //mod softdevice;
 mod pattern;
 mod watchdog;
 
+#[cfg(feature = "ble")]
 use app::*;
+
 use board::*;
 use runner::*;
 //use softdevice::*;
@@ -58,9 +61,11 @@ fn config() -> Config {
     config
 }
 
-#[embassy::main(config = "config()")]
+#[embassy_executor::main]
 //#[embassy::main]
-async fn main(s: embassy::executor::Spawner, p: Peripherals) {
+async fn main(s: embassy_executor::Spawner) {
+    let p = embassy_nrf::init(Default::default());
+
     // Setup burrboard peripherals
     static BOARD: BurrBoard = BurrBoard::new();
 
@@ -72,17 +77,20 @@ async fn main(s: embassy::executor::Spawner, p: Peripherals) {
     );
 
     let mut user_led = Output::new(p.P1_10.degrade(), Level::Low, OutputDrive::Standard);
+    #[cfg(feature = "ble")]
     let enable_ble = enable_ble(&mut buttons.0, &mut user_led).await;
 
     let ap = BOARD.mount(
         s,
         BoardPeripherals {
             buttons,
-            neopixel: defmt::unwrap!(NeoPixelRgb::<'_, _, NUM_LEDS>::new(p.PWM0, p.P1_08)),
+            //neopixel: defmt::unwrap!(NeoPixelRgb::<'_, _, NUM_LEDS>::new(p.PWM0, p.P1_08)),
+            neopixel: NeoPixelRgb::<'_, _, NUM_LEDS>::new(p.PWM0, p.P1_08).unwrap(),
         },
     );
 
     // Launch the softdevice
+    #[cfg(feature = "ble")]
     if enable_ble {
         info!("Enable BLE");
         user_led.set_high();
@@ -99,7 +107,7 @@ async fn main(s: embassy::executor::Spawner, p: Peripherals) {
     static WATCHDOG: ActorContext<Watchdog> = ActorContext::new();
     WATCHDOG.mount(s, Watchdog(Duration::from_secs(2)));
 
-    info!("Application started");
+    defmt::info!("Application started");
 }
 
 #[allow(unused)]
@@ -107,7 +115,7 @@ async fn main(s: embassy::executor::Spawner, p: Peripherals) {
 pub fn log_stack(file: &'static str) {
     let _u: u32 = 1;
     let _uptr: *const u32 = &_u;
-    info!("[{}] SP: 0x{:?}", file, &_uptr);
+    defmt::info!("[{}] SP: 0x{:?}", file, &_uptr);
 }
 
 async fn enable_ble(

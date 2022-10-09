@@ -11,7 +11,7 @@ use crate::{
     MyNeoPixel,
 };
 use drogue_device::drivers::led::neopixel::{filter::Filter, rgb::Rgb8};
-use embassy::time::Duration;
+use embassy_time::Duration;
 use strum::{EnumDiscriminants, EnumIter, IntoEnumIterator};
 
 pub const YELLOW: Rgb8 = Rgb8::new(0xFF, 0xFF, 0x00);

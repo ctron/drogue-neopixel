@@ -1,5 +1,5 @@
 use ector::{Actor, Address, Inbox};
-use embassy::time::{Duration, Ticker};
+use embassy_time::{Duration, Ticker};
 use futures::StreamExt;
 
 pub struct Watchdog(pub Duration);

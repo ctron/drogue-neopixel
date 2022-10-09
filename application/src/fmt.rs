@@ -1,7 +1,7 @@
 #![macro_use]
 #![allow(unused_macros)]
 
-#[cfg(all(feature = "defmt", feature = "log"))]
+#[cfg(all(feature = "debug", feature = "log"))]
 compile_error!("You may not enable both `defmt` and `log` features.");
 
 macro_rules! assert {

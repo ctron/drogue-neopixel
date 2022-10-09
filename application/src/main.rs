@@ -15,8 +15,6 @@ const NUM_LEDS: usize = 60;
 
 use drogue_device::drivers::led::neopixel::rgb::NeoPixelRgb;
 use embassy_nrf::gpio::{AnyPin, Input, Level, Output, OutputDrive, Pin, Pull};
-#[cfg(feature = "log")]
-use embassy_nrf::{gpio::NoPin, interrupt, uarte};
 use futures::future::{select, Either};
 use futures::pin_mut;
 
@@ -102,22 +100,6 @@ async fn main(s: embassy::executor::Spawner, p: Peripherals) {
     WATCHDOG.mount(s, Watchdog(Duration::from_secs(2)));
 
     info!("Application started");
-
-    //let mut neopixel = defmt::unwrap!(NeoPixel::new(p.PWM0, p.P0_16));
-    //let mut neopixel = defmt::unwrap!(NeoPixel::<'_, _, 1>::new(p.PWM0, p.P0_16));
-
-    //let mut neopixel = ap.neopixel;
-
-    //let dir = 1;
-
-    //let mut pixels = [BLUE, BLUE, YELLOW, YELLOW, BLUE, BLUE, YELLOW, YELLOW];
-
-    /*
-    loop {
-        if let Ok(f) = ap.user_led.request(LedMessage::Toggle) {
-            f.await;
-        }
-    }*/
 }
 
 #[allow(unused)]

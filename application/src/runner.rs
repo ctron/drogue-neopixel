@@ -13,7 +13,6 @@ use futures::{
 
 pub struct Runner<const N: usize> {
     pub neopixel: MyNeoPixel<N>,
-    speed_ms: u64,
     ticker: Ticker,
     controller: Controller<N>,
 }
@@ -39,7 +38,7 @@ pub enum State {
     ConfigureSleep,
 }
 
-const INITIAL_SPEED_MS: u64 = 250u64;
+const TICKER_SPEED: Duration = Duration::from_millis(50);
 
 #[ector::actor]
 impl<const N: usize> Actor for Runner<N> {
@@ -66,11 +65,10 @@ impl<const N: usize> Actor for Runner<N> {
 
 impl<const N: usize> Runner<N> {
     pub fn new(neopixel: MyNeoPixel<N>) -> Self {
-        let ticker = Ticker::every(Duration::from_millis(INITIAL_SPEED_MS));
+        let ticker = Ticker::every(TICKER_SPEED);
         let controller = Controller::<N>::new();
         Self {
             neopixel,
-            speed_ms: INITIAL_SPEED_MS,
             ticker,
             controller,
         }
@@ -155,19 +153,13 @@ impl<const N: usize> Runner<N> {
                             // ignore
                         }
                         Msg::Faster => {
-                            self.speed_ms = faster(self.speed_ms);
-                            defmt::info!("Speed: {} ms", self.speed_ms);
-                            self.ticker = Ticker::every(Duration::from_millis(self.speed_ms));
+                            self.controller.faster();
                         }
                         Msg::Slower => {
-                            self.speed_ms = slower(self.speed_ms);
-                            defmt::info!("Speed: {} ms", self.speed_ms);
-                            self.ticker = Ticker::every(Duration::from_millis(self.speed_ms));
+                            self.controller.slower();
                         }
                         Msg::ResetSpeed => {
-                            self.speed_ms = INITIAL_SPEED_MS;
-                            defmt::info!("Speed: {} ms", self.speed_ms);
-                            self.ticker = Ticker::every(Duration::from_millis(self.speed_ms));
+                            self.controller.reset_speed();
                         }
                         Msg::Lighter => {
                             self.controller.lighter();

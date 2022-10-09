@@ -1,4 +1,4 @@
-use crate::pattern::{Mode, ModeDiscriminants};
+use crate::pattern::{Context, Mode, ModeDiscriminants};
 use crate::MyNeoPixel;
 use drogue_device::drivers::led::neopixel::{
     filter::Brightness,
@@ -12,9 +12,12 @@ pub struct Controller<const N: usize> {
     mode: Mode<N>,
     sleep: Option<Sleep<u8>>,
     brightness: u8,
+    speed: u8,
+    last_run: Instant,
 }
 
 const INITIAL_BRIGHTNESS: u8 = 16;
+pub const DEFAULT_SPEED: u8 = u8::MAX / 2;
 
 impl<const N: usize> Controller<N> {
     pub fn new() -> Self {
@@ -23,6 +26,8 @@ impl<const N: usize> Controller<N> {
             pixels: [BLACK; N],
             sleep: None,
             brightness: INITIAL_BRIGHTNESS,
+            speed: DEFAULT_SPEED,
+            last_run: Instant::now(),
         };
         result.next();
         result
@@ -30,6 +35,7 @@ impl<const N: usize> Controller<N> {
 
     pub fn mode(&mut self, mode: ModeDiscriminants) {
         self.mode = mode.new(&mut self.pixels);
+        info!("Mode: {}", Into::<&'static str>::into(&self.mode))
     }
 
     pub fn next(&mut self) {
@@ -47,7 +53,17 @@ impl<const N: usize> Controller<N> {
             Brightness(self.brightness)
         };
 
-        self.mode.tick(&mut self.pixels, neopixel, &mut f).await;
+        let now = Instant::now();
+        let delta = now - self.last_run;
+        self.last_run = now;
+        let ctx = Context {
+            speed: self.speed,
+            delta,
+        };
+
+        self.mode
+            .tick(&mut self.pixels, neopixel, ctx, &mut f)
+            .await;
     }
 
     pub fn start_sleep(&mut self, duration: Duration) {
@@ -79,6 +95,18 @@ impl<const N: usize> Controller<N> {
     pub fn reset_brightness(&mut self) {
         self.brightness = INITIAL_BRIGHTNESS;
         defmt::info!("Brightness: {}", self.brightness);
+    }
+
+    pub fn faster(&mut self) {
+        self.speed = self.speed.saturating_add(1);
+    }
+
+    pub fn slower(&mut self) {
+        self.speed = self.speed.saturating_sub(1);
+    }
+
+    pub fn reset_speed(&mut self) {
+        self.speed = DEFAULT_SPEED;
     }
 }
 

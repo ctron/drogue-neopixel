@@ -4,18 +4,27 @@ mod rainbow;
 
 use crate::{
     pattern::{
-        countries::{DE, UA},
+        // countries::{DE, UA},
         fire::Fire,
         rainbow::{Rainbow, RainbowPart},
     },
     MyNeoPixel,
 };
 use drogue_device::drivers::led::neopixel::{filter::Filter, rgb::Rgb8};
+use embassy::time::Duration;
 use strum::{EnumDiscriminants, EnumIter, IntoEnumIterator};
 
 pub const YELLOW: Rgb8 = Rgb8::new(0xFF, 0xFF, 0x00);
 
-#[derive(EnumDiscriminants)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Context {
+    /// the speed configuration
+    pub speed: u8,
+    /// the time since the last run (could be zero)
+    pub delta: Duration,
+}
+
+#[derive(EnumDiscriminants, strum::IntoStaticStr)]
 #[strum_discriminants(derive(EnumIter))]
 pub enum Mode<const N: usize> {
     Off,
@@ -72,15 +81,16 @@ impl<const N: usize> Mode<N> {
         &mut self,
         pixels: &mut [Rgb8; N],
         neopixel: &mut MyNeoPixel<N>,
+        ctx: Context,
         f: &mut F,
     ) {
         match self {
             Self::Off => {}
             //Self::UA(pattern) => pattern.tick(pixels, neopixel, f).await,
             //Self::DE(pattern) => pattern.tick(pixels, neopixel, f).await,
-            Self::Rainbow(pattern) => pattern.tick(pixels, neopixel, f).await,
-            Self::RainbowPart(pattern) => pattern.tick(pixels, neopixel, f).await,
-            Self::Fire(pattern) => pattern.tick(pixels, neopixel, f).await,
+            Self::Rainbow(pattern) => pattern.tick(pixels, neopixel, ctx, f).await,
+            Self::RainbowPart(pattern) => pattern.tick(pixels, neopixel, ctx, f).await,
+            Self::Fire(pattern) => pattern.tick(pixels, neopixel, ctx, f).await,
         }
     }
 }
